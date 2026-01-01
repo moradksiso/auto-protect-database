@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice {{ income.invoice_number }}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Cairo', sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    
+    .invoice-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    
+    .header {
+      text-align: center;
+      border-bottom: 3px solid #3b82f6;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .company-name {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 10px;
+    }
+    
+    .company-info {
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    
+    .invoice-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 30px 0 20px;
+      text-align: center;
+    }
+    
+    .invoice-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+      background: #f9fafb;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    
+    .meta-item {
+      padding: 10px 0;
+    }
+    
+    .meta-label {
+      font-weight: 600;
+      color: #4b5563;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    
+    .meta-value {
+      color: #1f2937;
+      font-size: 16px;
+    }
+    
+    .customer-section {
+      background: #eff6ff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    
+    .section-title {
+      font-weight: 700;
+      color: #1e40af;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    
+    .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 30px 0;
+    }
+    
+    .details-table th {
+      background: #3b82f6;
+      color: white;
+      padding: 15px;
+      text-align: right;
+      font-weight: 600;
+    }
+    
+    .details-table td {
+      padding: 15px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .total-section {
+      margin-top: 30px;
+      text-align: left;
+      background: #10b981;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    
+    .total-label {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .total-amount {
+      font-size: 32px;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+    
+    .footer {
+      margin-top: 50px;
+      padding-top: 20px;
+      border-top: 2px solid #e5e7eb;
+      text-align: center;
+      color: #6b7280;
+      font-size: 13px;
+    }
+    
+    .legal-info {
+      background: #fef3c7;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 30px;
+      border: 2px solid #fbbf24;
+    }
+    
+    .legal-title {
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    
+    .legal-text {
+      color: #78350f;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+    
+    .print-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      font-family: 'Cairo', sans-serif;
+    }
+    
+    .print-button:hover {
+      background: #2563eb;
+    }
+    
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      
+      .invoice-container {
+        box-shadow: none;
+        padding: 20px;
+      }
+      
+      .print-button {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="print-button" onclick="window.print()">🖨️ طباعة الفاتورة</button>
+  
+  <div class="invoice-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="company-name">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle;">
+          <path d="M4 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm8 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zM3 5.5A1.5 1.5 0 0 1 4.5 4h7A1.5 1.5 0 0 1 13 5.5v5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 10.5v-5zM4.5 5a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5v-5a.5.5 0 0 0-.5-.5h-7z"/>
+        </svg>
+        Auto Protect
+      </div>
+      <div class="company-info">
+        خدمات تغليف وحماية السيارات<br>
+        Car Wrapping & Protection Services<br>
+        📍 العنوان: اكادير شارع المحمدية<br>
+        📞 الهاتف: +212661225829 | واتساب: +212661225829
+      </div>
+    </div>
+    
+    <!-- Invoice Title -->
+    <div class="invoice-title">فاتورة / Invoice</div>
+    
+    <!-- Invoice Meta -->
+    <div class="invoice-meta">
+      <div class="meta-item">
+        <div class="meta-label">رقم الفاتورة / Invoice Number</div>
+        <div class="meta-value">{{ income.invoice_number }}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">التاريخ / Date</div>
+        <div class="meta-value">{{ income.date }}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">اسم الموظف / Agent Name</div>
+        <div class="meta-value" style="font-weight: 700; color: #1e40af;">
+          {{ agent.name if agent else 'N/A' }}
+          {% if agent and agent.phone %}<br><small style="font-size: 12px;">📞 {{ agent.phone }}</small>{% endif %}
+        </div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">المصدر / Source</div>
+        <div class="meta-value">{{ income.source or '-' }}</div>
+      </div>
+    </div>
+    
+    <!-- Customer Section -->
+    <div class="customer-section">
+      <div class="section-title">معلومات العميل / Customer Information</div>
+      <div style="margin-top: 10px;">
+        <strong>اسم العميل / Customer Name:</strong> {{ income.customer_name or 'N/A' }}<br>
+        <strong>نوع السيارة / Car Type:</strong> {{ income.car_type or 'N/A' }}
+      </div>
+    </div>
+    
+    <!-- Service Details -->
+    <table class="details-table">
+      <thead>
+        <tr>
+          <th>الوصف / Description</th>
+          <th>نوع الخدمة / Service Type</th>
+          <th>المبلغ / Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ income.note or 'خدمة تغليف سيارة كاملة' }}</td>
+          <td><strong>{{ income.service_type or 'N/A' }}</strong></td>
+          <td style="font-weight: 700; font-size: 18px;">{{ "%.2f"|format(income.amount) }} درهم (MAD)</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <!-- Total -->
+    <div class="total-section">
+      <div class="total-label">المبلغ الإجمالي / Total Amount</div>
+      <div class="total-amount">{{ "%.2f"|format(income.amount) }} درهم</div>
+      <div style="margin-top: 10px; font-size: 14px;">درهم مغربي / Moroccan Dirham (MAD)</div>
+    </div>
+    
+    <!-- Legal Info -->
+    <div class="legal-info">
+      <div class="legal-title">⚖️ معلومات قانونية / Legal Information</div>
+      <div class="legal-text">
+        <strong>• رقم التسجيل الضريبي:</strong> ICE XXXXXXXXXXXX<br>
+        <strong>• رقم السجل التجاري:</strong> RC XXXXXX<br>
+        <strong>• طريقة الدفع:</strong> نقداً / تحويل بنكي<br>
+        <strong>• شروط الدفع:</strong> الدفع عند الاستلام<br>
+        <strong>• الضريبة على القيمة المضافة (TVA):</strong> 20%<br>
+        <br>
+        <strong>ملاحظة:</strong> هذه الفاتورة صالحة وفقاً للقوانين المغربية. يرجى الاحتفاظ بها للسجلات الضريبية.
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+      شكراً لثقتكم بنا / Thank you for your business<br>
+      © 2025 Auto Protect Database. جميع الحقوق محفوظة.
+    </div>
+  </div>
+</body>
+</html>

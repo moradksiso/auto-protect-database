@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Admin Logs{% endblock %}
+{% block content %}
+<h1 class="mb-4">Admin Logs</h1>
+
+<div class="row">
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header bg-danger text-white">
+        <h5 class="card-title mb-0">Add Log Entry</h5>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-2">
+            <label class="form-label">Action *</label>
+            <input class="form-control" name="action" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Detail</label>
+            <textarea class="form-control" name="detail" rows="3"></textarea>
+          </div>
+          <button class="btn btn-danger" type="submit">Add Log</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header bg-danger text-white">
+        <h5 class="card-title mb-0">All Logs</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr><th>ID</th><th>Action</th><th>Detail</th><th>When</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+            {% for l in logs %}
+            <tr>
+              <td>{{ l.id }}</td>
+              <td><code>{{ l.action }}</code></td>
+              <td>{{ (l.detail[:50] + '...') if l.detail and l.detail|length > 50 else (l.detail or '-') }}</td>
+              <td><small>{{ l.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+              <td>
+                <form action="/logs/{{ l.id }}/delete" method="post" style="display:inline">
+                  <button class="btn btn-sm btn-danger" type="submit" onclick="return confirm('Delete?')">Delete</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

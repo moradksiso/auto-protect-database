@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% block title %}{{ g.t('Admin Dashboard') }}{% endblock %}
+{% block content %}
+<h1 class="mb-4" style="color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: 700;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-speedometer2" viewBox="0 0 16 16" style="vertical-align: middle;">
+    <path d="M8 4a.5.5 0 0 1 .5.5V6a.5.5 0 0 1-1 0V4.5A.5.5 0 0 1 8 4M3.732 5.732a.5.5 0 0 1 .707 0l.915.914a.5.5 0 1 1-.708.708l-.914-.915a.5.5 0 0 1 0-.707zM2 10a.5.5 0 0 1 .5-.5h1.586a.5.5 0 0 1 0 1H2.5A.5.5 0 0 1 2 10m9.5 0a.5.5 0 0 1 .5-.5h1.5a.5.5 0 0 1 0 1H12a.5.5 0 0 1-.5-.5m.754-4.246a.389.389 0 0 0-.527-.02L7.547 9.31a.91.91 0 1 0 1.302 1.258l3.434-4.297a.389.389 0 0 0-.029-.518z"/>
+    <path fill-rule="evenodd" d="M0 10a8 8 0 1 1 15.547 2.661c-.442 1.253-1.845 1.602-2.932 1.25C11.309 13.488 9.475 13 8 13c-1.474 0-3.31.488-4.615.911-1.087.352-2.49.003-2.932-1.25A7.988 7.988 0 0 1 0 10m8-7a7 7 0 0 0-6.603 9.329c.203.575.923.876 1.68.63C4.397 12.533 6.358 12 8 12s3.604.532 4.923.96c.757.245 1.477-.056 1.68-.631A7 7 0 0 0 8 3"/>
+  </svg>
+  {{ g.t('Admin Dashboard') }}
+</h1>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+  <div class="col-md-3 mb-3">
+    <div class="card stats-card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white;">
+      <div class="card-body">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 class="mb-1">{{ "%.2f"|format(stats.total_purchases) }} درهم</h3>
+            <p class="mb-0">{{ g.t('Purchases This Month') }}</p>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="rgba(255,255,255,0.3)" class="bi bi-cart3" viewBox="0 0 16 16">
+            <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.472L4.415 11H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM3.102 4l.84 4.479 9.144-.459L13.89 4H3.102zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 mb-3">
+    <div class="card stats-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+      <div class="card-body">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 class="mb-1">{{ "%.2f"|format(stats.total_income) }} درهم</h3>
+            <p class="mb-0">{{ g.t('Income This Month') }}</p>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="rgba(255,255,255,0.3)" class="bi bi-cash-coin" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M11 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm5-4a5 5 0 1 1-10 0 5 5 0 0 1 10 0z"/>
+            <path d="M9.438 11.944c.047.596.518 1.06 1.363 1.116v.44h.375v-.443c.875-.061 1.386-.529 1.386-1.207 0-.618-.39-.936-1.09-1.1l-.296-.07v-1.2c.376.043.614.248.671.532h.658c-.047-.575-.54-1.024-1.329-1.073V8.5h-.375v.45c-.747.073-1.255.522-1.255 1.158 0 .562.378.92 1.007 1.066l.248.061v1.272c-.384-.058-.639-.27-.696-.563h-.668zm1.36-1.354c-.369-.085-.569-.26-.569-.522 0-.294.216-.514.572-.578v1.1h-.003zm.432.746c.449.104.655.272.655.569 0 .339-.257.571-.709.614v-1.195l.054.012z"/>
+            <path d="M1 0a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h4.083c.058-.344.145-.678.258-1H3a2 2 0 0 0-2-2V3a2 2 0 0 0 2-2h10a2 2 0 0 0 2 2v3.528c.38.34.717.728 1 1.154V1a1 1 0 0 0-1-1H1z"/>
+            <path d="M9.998 5.083 10 5a2 2 0 1 0-3.132 1.65 5.982 5.982 0 0 1 3.13-1.567z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 mb-3">
+    <div class="card stats-card" style="background: linear-gradient(135deg, {{ '#10b981' if stats.profit >= 0 else '#ef4444' }} 0%, {{ '#059669' if stats.profit >= 0 else '#dc2626' }} 100%); color: white;">
+      <div class="card-body">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 class="mb-1">{{ "%.2f"|format(stats.profit) }} درهم</h3>
+            <p class="mb-0">{{ g.t('Net Profit') }}</p>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="rgba(255,255,255,0.3)" class="bi bi-graph-up-arrow" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M0 0h1v15h15v1H0V0Zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5Z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 mb-3">
+    <div class="card stats-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+      <div class="card-body">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 class="mb-1">{{ stats.open_tasks }}</h3>
+            <p class="mb-0">{{ g.t('Open Tasks') }} <span class="badge bg-danger ms-2">{{ stats.overdue_tasks }} {{ g.t('Overdue') }}</span></p>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="rgba(255,255,255,0.3)" class="bi bi-list-check" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3.854 2.146a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 1 1 .708-.708L2 3.293l1.146-1.147a.5.5 0 0 1 .708 0zm0 4a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 1 1 .708-.708L2 7.293l1.146-1.147a.5.5 0 0 1 .708 0zm0 4a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 0 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Info Alert -->
+<div class="alert alert-info mb-4" style="border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <strong>📊 {{ g.t('Quick Info') }}:</strong> {{ g.t('Total Agents') }}: <strong>{{ stats.agents_count }}</strong> | 
+  {{ g.t('Top Performer') }}: <strong>{{ stats.top_agent.name if stats.top_agent else 'N/A' }}</strong> 
+  <a href="/reports/performance" class="alert-link ms-3">{{ g.t('View Full Report') }} →</a>
+</div>
+
+<!-- Three Column Layout -->
+<div class="row">
+  <!-- Left: Agents -->
+  <div class="col-md-4 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-people-fill" viewBox="0 0 16 16">
+            <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7Zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216Z"/>
+            <path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
+          </svg>
+          {{ g.t('Agents') }}
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if agents %}
+          <ul class="list-group">
+            {% for a in agents[:5] %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ a.name }}
+                <span class="badge bg-primary rounded-pill">{{ a.phone or 'N/A' }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+          <a href="/agents" class="btn btn-sm btn-primary mt-3 w-100">{{ g.t('View') }} {{ g.t('All Agents') }}</a>
+        {% else %}
+          <p class="text-muted">{{ g.t('No data') }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Center: Files -->
+  <div class="col-md-4 mb-4">
+    <div class="card">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-file-earmark-arrow-up" viewBox="0 0 16 16">
+            <path d="M8.5 11.5a.5.5 0 0 1-1 0V7.707L6.354 8.854a.5.5 0 1 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 7.707V11.5z"/>
+            <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+          </svg>
+          {{ g.t('Files') }}
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if files %}
+          <ul class="list-group">
+            {% for f in files[:5] %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ f.filename }}</span>
+                <a href="/files/download/{{ f.id }}" class="btn btn-sm btn-success">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                  </svg>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+          <a href="/files/upload" class="btn btn-sm btn-success mt-3 w-100">{{ g.t('Upload') }} {{ g.t('Files') }}</a>
+        {% else %}
+          <p class="text-muted">{{ g.t('No data') }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Tasks -->
+  <div class="col-md-4 mb-4">
+    <div class="card">
+      <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-clipboard-check" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
+            <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+            <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+          </svg>
+          {{ g.t('Recent Tasks') }}
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if tasks %}
+          <ul class="list-group">
+            {% for t in tasks[:5] %}
+              <li class="list-group-item">
+                <strong>{{ t.title }}</strong>
+                <br><small class="text-muted">{{ t.due_date or 'No due date' }}</small>
+              </li>
+            {% endfor %}
+          </ul>
+          <a href="/tasks" class="btn btn-sm btn-warning mt-3 w-100">{{ g.t('View') }} {{ g.t('All') }} {{ g.t('Tasks') }}</a>
+        {% else %}
+          <p class="text-muted">{{ g.t('No data') }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

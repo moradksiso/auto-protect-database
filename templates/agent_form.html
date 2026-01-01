@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Agent Form{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h4 class="card-title mb-0">{% if agent %}Edit Agent{% else %}New Agent{% endif %}</h4>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">Name *</label>
+            <input class="form-control" name="name" value="{{ agent.name if agent else '' }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Phone</label>
+            <input class="form-control" name="phone" value="{{ agent.phone if agent else '' }}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input class="form-control" type="email" name="email" value="{{ agent.email if agent else '' }}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Params (JSON)</label>
+            <textarea class="form-control" name="params" rows="4">{{ agent.params if agent else '' }}</textarea>
+          </div>
+          <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <a class="btn btn-secondary" href="/agents">Cancel</a>
+            <button class="btn btn-primary" type="submit">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

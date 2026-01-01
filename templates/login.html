@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h4 class="card-title mb-0">Admin Login</h4>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input class="form-control" name="username" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input class="form-control" name="password" type="password" required>
+          </div>
+          <button class="btn btn-primary w-100" type="submit">Login</button>
+        </form>
+        <div class="mt-2 text-center">
+          <a href="/agent/login" class="text-muted small">Agent Login</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

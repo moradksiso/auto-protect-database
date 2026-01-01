@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% block title %}Car Wrapping Services{% endblock %}
+{% block content %}
+<h1 class="mb-4">خدمات تغليف السيارات (Daily Income)</h1>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-success text-white">
+        <h5 class="card-title mb-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+            <path d="M4 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm8 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zM3 5.5A1.5 1.5 0 0 1 4.5 4h7A1.5 1.5 0 0 1 13 5.5v5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 10.5v-5zM4.5 5a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5v-5a.5.5 0 0 0-.5-.5h-7z"/>
+          </svg>
+          إضافة خدمة تغليف (Add Service)
+        </h5>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% if not is_agent %}
+          <div class="mb-2">
+            <label class="form-label">Agent *</label>
+            <select class="form-select" name="agent_id" required>
+              {% for a in agents %}
+              <option value="{{ a.id }}">{{ a.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% else %}
+          <div class="alert alert-info mb-2">
+            <strong>{{ g.t('Agent') }}:</strong> {{ current_user.name }}
+          </div>
+          {% endif %}
+          <div class="mb-2">
+            <label class="form-label">المبلغ (Amount) * - درهم مغربي (MAD)</label>
+            <input class="form-control" name="amount" type="number" step="0.01" required placeholder="0.00">
+            <small class="text-muted">أدخل المبلغ بالدرهم المغربي</small>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">اسم العميل (Customer Name) *</label>
+            <input class="form-control" name="customer_name" required placeholder="اسم العميل">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">نوع خدمة التغليف (Service Type) *</label>
+            <input class="form-control" name="service_type" list="service_types_list" required placeholder="مثال: تغليف كامل، تغليف جزئي، حماية PPF">
+            <datalist id="service_types_list">
+              {% for st in service_types %}
+              <option value="{{ st.name }}">
+              {% endfor %}
+            </datalist>
+            <small class="text-muted">اكتب لإضافة خدمة جديدة أو اختر من القائمة</small>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">نوع السيارة (Car Type) *</label>
+            <input class="form-control" name="car_type" list="car_types_list" required placeholder="مثال: سيدان، SUV، كوبيه">
+            <datalist id="car_types_list">
+              {% for ct in car_types %}
+              <option value="{{ ct.name }}">
+              {% endfor %}
+            </datalist>
+            <small class="text-muted">اكتب لإضافة نوع سيارة جديد أو اختر من القائمة</small>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">المصدر (Source) *</label>
+            <input class="form-control" name="source" required placeholder="مثال: كاش، بطاقة، تحويل">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">التاريخ (Date)</label>
+            <input class="form-control" type="date" name="date">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">ملاحظات (Note)</label>
+            <textarea class="form-control" name="note" rows="2" placeholder="ملاحظات إضافية..."></textarea>
+          </div>
+          <button class="btn btn-success btn-lg w-100" type="submit">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            إضافة الخدمة وتوليد الفاتورة
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-success text-white">
+        <h5 class="card-title mb-0">Monthly Totals & Downloads</h5>
+      </div>
+      <div class="card-body">
+        <ul class="list-group">
+        {% if monthly %}
+          {% for m in monthly %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <span class="fw-bold">{{ m.month }}</span>
+              <br>
+              <small class="text-muted">الإجمالي: {{ "%.2f"|format(m.amount) }} درهم (MAD)</small>
+            </div>
+            <a href="/income/download/{{ m.month }}" class="btn btn-sm btn-success">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+              </svg>
+              Excel
+            </a>
+          </li>
+          {% endfor %}
+        {% else %}
+          <li class="list-group-item text-muted">No data</li>
+        {% endif %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Search & Filter -->
+<div class="card mt-4">
+  <div class="card-header bg-secondary text-white">
+    <h5 class="card-title mb-0">🔍 Search & Filter</h5>
+  </div>
+  <div class="card-body">
+    <form method="get" action="/income" class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">From Date</label>
+        <input type="date" class="form-control" name="from_date" value="{{ request.args.get('from_date', '') }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">To Date</label>
+        <input type="date" class="form-control" name="to_date" value="{{ request.args.get('to_date', '') }}">
+      </div>
+      {% if not is_agent %}
+      <div class="col-md-2">
+        <label class="form-label">Agent</label>
+        <select class="form-select" name="agent_id">
+          <option value="">All Agents</option>
+          {% for a in agents %}
+          <option value="{{ a.id }}" {% if request.args.get('agent_id') == a.id|string %}selected{% endif %}>{{ a.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+      <div class="col-md-{{ '2' if not is_agent else '3' }}">
+        <label class="form-label">Source</label>
+        <input type="text" class="form-control" name="source" value="{{ request.args.get('source', '') }}" placeholder="Search source...">
+      </div>
+      <div class="col-md-{{ '2' if not is_agent else '3' }}">
+        <label class="form-label">&nbsp;</label>
+        <div>
+          <button type="submit" class="btn btn-primary">Filter</button>
+          <a href="/income" class="btn btn-outline-secondary">Clear</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card mt-4">
+  <div class="card-header bg-success text-white">
+    <h5 class="card-title mb-0">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+        <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM1 10.5A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z"/>
+      </svg>
+      الخدمات الأخيرة (Recent Services)
+    </h5>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-sm">
+        <thead>
+          <tr><th>التاريخ</th>{% if not is_agent %}<th>الموظف</th>{% endif %}<th>العميل</th><th>السيارة</th><th>الخدمة</th><th>المبلغ (درهم)</th><th>الفاتورة</th><th>إجراءات</th></tr>
+        </thead>
+        <tbody>
+        {% for i in incomes %}
+        <tr>
+          <td>{{ i.date }}</td>
+          {% if not is_agent %}
+          <td>
+            {% if i.agent_id %}
+              {% set agent = agents|selectattr('id', 'equalto', i.agent_id)|first %}
+              {{ agent.name if agent else 'N/A' }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          {% endif %}
+          <td>{{ i.customer_name or '-' }}</td>
+          <td>{{ i.car_type or '-' }}</td>
+          <td>{{ i.service_type or '-' }}</td>
+          <td>{{ "%.2f"|format(i.amount) }} MAD</td>
+          <td>{{ i.invoice_number or '-' }}</td>
+          <td>
+            <div class="btn-group" role="group">
+              {% if i.invoice_number %}
+              <a href="/income/{{ i.id }}/invoice" class="btn btn-sm btn-info" target="_blank" title="View Invoice">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+                  <path d="M4.603 14.087a.81.81 0 0 1-.438-.42c-.195-.388-.13-.776.08-1.102.198-.307.526-.568.897-.787a7.68 7.68 0 0 1 1.482-.645 19.697 19.697 0 0 0 1.062-2.227 7.269 7.269 0 0 1-.43-1.295c-.086-.4-.119-.796-.046-1.136.075-.354.274-.672.65-.823.192-.077.4-.12.602-.077a.7.7 0 0 1 .477.365c.088.164.12.356.127.538.007.188-.012.396-.047.614-.084.51-.27 1.134-.52 1.794a10.954 10.954 0 0 0 .98 1.686 5.753 5.753 0 0 1 1.334.05c.364.066.734.195.96.465.12.144.193.32.2.518.007.192-.047.382-.138.563a1.04 1.04 0 0 1-.354.416.856.856 0 0 1-.51.138c-.331-.014-.654-.196-.933-.417a5.712 5.712 0 0 1-.911-.95 11.651 11.651 0 0 0-1.997.406 11.307 11.307 0 0 1-1.02 1.51c-.292.35-.609.656-.927.787a.793.793 0 0 1-.58.029zm1.379-1.901c-.166.076-.32.156-.459.238-.328.194-.541.383-.647.547-.094.145-.096.25-.04.361.01.022.02.036.026.044a.266.266 0 0 0 .035-.012c.137-.056.355-.235.635-.572a8.18 8.18 0 0 0 .45-.606zm1.64-1.33a12.71 12.71 0 0 1 1.01-.193 11.744 11.744 0 0 1-.51-.858 20.801 20.801 0 0 1-.5 1.05zm2.446.45c.15.163.296.3.435.41.24.19.407.253.498.256a.107.107 0 0 0 .07-.015.307.307 0 0 0 .094-.125.436.436 0 0 0 .059-.2.095.095 0 0 0-.026-.063c-.052-.062-.2-.152-.518-.209a3.876 3.876 0 0 0-.612-.053zM8.078 7.8a6.7 6.7 0 0 0 .2-.828c.031-.188.043-.343.038-.465a.613.613 0 0 0-.032-.198.517.517 0 0 0-.145.04c-.087.035-.158.106-.196.283-.04.192-.03.469.046.822.024.111.054.227.09.346z"/>
+                </svg>
+              </a>
+              {% endif %}
+              
+              {% if not is_agent %}
+              <a href="/income/{{ i.id }}/edit" class="btn btn-sm btn-primary" title="تعديل">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                </svg>
+              </a>
+              <form method="post" action="/income/{{ i.id }}/delete" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا المدخول؟');">
+                <button type="submit" class="btn btn-sm btn-danger" title="حذف">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                  </svg>
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

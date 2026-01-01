@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}API Tokens{% endblock %}
+{% block content %}
+<h1 class="mb-4">API Token Management</h1>
+
+<div class="row">
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header bg-secondary text-white">
+        <h5 class="card-title mb-0">Create New Token</h5>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-2">
+            <label class="form-label">Token Name *</label>
+            <input class="form-control" name="name" placeholder="e.g., Mobile App, Integration" required>
+            <small class="form-text text-muted">Descriptive name for this token</small>
+          </div>
+          <button class="btn btn-secondary" type="submit">Create Token</button>
+        </form>
+      </div>
+    </div>
+    <div class="alert alert-info mt-3">
+      <strong>API Usage:</strong><br>
+      <code>curl -H "Authorization: Token YOUR_TOKEN_HERE" http://localhost:5000/api/agents</code>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header bg-secondary text-white">
+        <h5 class="card-title mb-0">Existing Tokens</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr><th>ID</th><th>Name</th><th>Token</th><th>Created</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+            {% for t in tokens %}
+            <tr>
+              <td>{{ t.id }}</td>
+              <td>{{ t.name }}</td>
+              <td>
+                {% if t.show_token %}
+                  <code class="bg-light p-1">{{ t.token }}</code>
+                  <span class="badge bg-success">NEW - Copy now</span>
+                {% else %}
+                  <code class="text-muted">***hidden***</code>
+                {% endif %}
+              </td>
+              <td><small>{{ t.created_at.strftime('%Y-%m-%d') }}</small></td>
+              <td>
+                {% if t.revoked %}
+                  <span class="badge bg-danger">Revoked</span>
+                {% else %}
+                  <span class="badge bg-success">Active</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if not t.revoked %}
+                <form method="post" action="/api_tokens/{{ t.id }}/revoke" style="display:inline">
+                  <button class="btn btn-sm btn-danger" type="submit" onclick="return confirm('Revoke?')">Revoke</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="alert alert-warning mt-3">
+      <strong>⚠️ Note:</strong> Token value is only shown once when created. Keep it safe!
+    </div>
+  </div>
+</div>
+{% endblock %}

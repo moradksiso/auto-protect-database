@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1 class="mb-4">Admin Dashboard</h1>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card bg-primary text-white">
+      <div class="card-body">
+        <h6 class="card-title">المشتريات هذا الشهر</h6>
+        <h2>{{ "%.2f"|format(stats.total_purchases) }} د.م</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-success text-white">
+      <div class="card-body">
+        <h6 class="card-title">المداخيل هذا الشهر</h6>
+        <h2>{{ "%.2f"|format(stats.total_income) }} د.م</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card {% if stats.profit >= 0 %}bg-info{% else %}bg-danger{% endif %} text-white">
+      <div class="card-body">
+        <h6 class="card-title">الربح الصافي</h6>
+        <h2>{{ "%.2f"|format(stats.profit) }} د.م</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-warning text-dark">
+      <div class="card-body">
+        <h6 class="card-title">المهام</h6>
+        <h2>{{ stats.open_tasks }} <small>/ {{ stats.overdue_tasks }} متأخرة</small></h2>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Info -->
+<div class="row mb-4">
+  <div class="col-md-12">
+    <div class="alert alert-info">
+      <strong>📊 نظرة سريعة:</strong> 
+      عدد الموظفين: <strong>{{ stats.agents_count }}</strong> |
+      {% if stats.top_agent %}
+        الموظف الأفضل: <strong>{{ stats.top_agent.name }}</strong>
+      {% else %}
+        لا توجد بيانات للموظفين بعد
+      {% endif %}
+      | 
+      <a href="/reports/performance" class="alert-link">عرض تقرير الأداء الكامل</a>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6 mb-4">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">Agents</h5>
+      </div>
+      <div class="card-body">
+        <ul class="list-group">
+        {% for a in agents[:5] %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ a.name }}
+            <a class="btn btn-sm btn-outline-secondary" href="/agents/{{a.id}}/edit">Edit</a>
+          </li>
+        {% endfor %}
+        </ul>
+        <a class="btn btn-primary btn-sm mt-2" href="/agents/new">Create new agent</a>
+        <a class="btn btn-secondary btn-sm mt-2" href="/agents">View all</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6 mb-4">
+    <div class="card">
+      <div class="card-header bg-success text-white">
+        <h5 class="card-title mb-0">Uploaded Files</h5>
+      </div>
+      <div class="card-body">
+        <ul class="list-group">
+        {% for f in files %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ f.filename }}
+            <a class="btn btn-sm btn-outline-success" href="/files/download/{{ f.id }}">Download</a>
+          </li>
+        {% endfor %}
+        </ul>
+        <a class="btn btn-success btn-sm mt-2" href="/files/upload">Upload XLS</a>
+        <a class="btn btn-secondary btn-sm mt-2" href="/files/download_all">Download all (zip)</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header bg-warning text-dark">
+        <h5 class="card-title mb-0">Recent Tasks</h5>
+      </div>
+      <div class="card-body">
+        <ul class="list-group">
+        {% for t in tasks %}
+          <li class="list-group-item">
+            <strong>{{ t.title }}</strong> - Agent {{ t.agent_id }} - Due {{ t.due_date }}
+          </li>
+        {% endfor %}
+        </ul>
+        <a class="btn btn-warning btn-sm mt-2" href="/tasks">View all tasks</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

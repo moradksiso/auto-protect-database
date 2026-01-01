@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}الإعدادات{% endblock %}
+{% block content %}
+<h1 class="mb-4">⚙️ إعدادات التطبيق</h1>
+
+<div class="row">
+  <!-- Database Info -->
+  <div class="col-md-6 mb-4">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">📊 معلومات قاعدة البيانات</h5>
+      </div>
+      <div class="card-body">
+        <table class="table table-sm">
+          <tr>
+            <th>حجم قاعدة البيانات:</th>
+            <td>{{ "%.2f"|format(db_size) }} MB</td>
+          </tr>
+          <tr>
+            <th>عدد الموظفين:</th>
+            <td>{{ counts.agents }}</td>
+          </tr>
+          <tr>
+            <th>عدد المشتريات:</th>
+            <td>{{ counts.purchases }}</td>
+          </tr>
+          <tr>
+            <th>عدد المداخيل:</th>
+            <td>{{ counts.income }}</td>
+          </tr>
+          <tr>
+            <th>عدد المهام:</th>
+            <td>{{ counts.tasks }}</td>
+          </tr>
+          <tr>
+            <th>عدد السجلات:</th>
+            <td>{{ counts.logs }}</td>
+          </tr>
+          <tr>
+            <th>الملفات المرفوعة:</th>
+            <td>{{ counts.files }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backup -->
+  <div class="col-md-6 mb-4">
+    <div class="card">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0">💾 النسخ الاحتياطي</h5>
+      </div>
+      <div class="card-body">
+        <p>قم بتحميل نسخة احتياطية من قاعدة البيانات</p>
+        <form method="post">
+          <input type="hidden" name="action" value="backup">
+          <button type="submit" class="btn btn-success">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+              <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+              <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+            </svg>
+            تحميل نسخة احتياطية
+          </button>
+        </form>
+        
+        <div class="alert alert-warning mt-3 mb-0">
+          <small><strong>ملاحظة:</strong> احفظ النسخة الاحتياطية في مكان آمن</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Application Info -->
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header bg-info text-white">
+        <h5 class="mb-0">ℹ️ معلومات التطبيق</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6>النظام</h6>
+            <ul>
+              <li>النسخة: 1.0</li>
+              <li>Framework: Flask 2.3.3</li>
+              <li>Database: SQLite</li>
+              <li>Python: 3.9+</li>
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <h6>الميزات</h6>
+            <ul>
+              <li>✅ إدارة الموظفين</li>
+              <li>✅ تتبع المشتريات والمداخيل</li>
+              <li>✅ المهام والتقارير</li>
+              <li>✅ تحليلات الأداء</li>
+              <li>✅ تصدير Excel شهري</li>
+              <li>✅ API للتكامل الخارجي</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mt-3">
+  <a href="/admin" class="btn btn-secondary">← العودة للوحة التحكم</a>
+  <a href="/change_password" class="btn btn-warning">🔐 تغيير كلمة المرور</a>
+</div>
+
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}تعديل مدخول{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <h1 class="mb-4">تعديل مدخول</h1>
+  
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h5 class="card-title mb-0">تعديل بيانات المدخول</h5>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">الوكيل *</label>
+                <select name="agent_id" class="form-control" required>
+                  {% for agent in agents %}
+                  <option value="{{ agent.id }}" {% if agent.id == income.agent_id %}selected{% endif %}>{{ agent.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">المبلغ (MAD) *</label>
+                <input type="number" step="0.01" name="amount" class="form-control" value="{{ income.amount }}" required />
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">اسم العميل *</label>
+                <input type="text" name="customer_name" class="form-control" value="{{ income.customer_name }}" required />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">نوع الخدمة *</label>
+                <input type="text" name="service_type" class="form-control" value="{{ income.service_type }}" list="service-types" required />
+                <datalist id="service-types">
+                  {% for st in service_types %}
+                  <option value="{{ st.name }}">
+                  {% endfor %}
+                </datalist>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">نوع السيارة *</label>
+                <input type="text" name="car_type" class="form-control" value="{{ income.car_type }}" list="car-types" required />
+                <datalist id="car-types">
+                  {% for ct in car_types %}
+                  <option value="{{ ct.name }}">
+                  {% endfor %}
+                </datalist>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">المصدر *</label>
+                <input type="text" name="source" class="form-control" value="{{ income.source }}" required />
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">التاريخ</label>
+                <input type="date" name="date" class="form-control" value="{{ income.date }}" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">رقم الفاتورة</label>
+                <input type="text" class="form-control" value="{{ income.invoice_number }}" disabled />
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">ملاحظات</label>
+              <textarea name="note" class="form-control" rows="3">{{ income.note or '' }}</textarea>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+              <a href="/income" class="btn btn-secondary">إلغاء</a>
+              <button type="submit" class="btn btn-primary">حفظ التعديلات</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header bg-info text-white">
+          <h5 class="card-title mb-0">معلومات المدخول</h5>
+        </div>
+        <div class="card-body">
+          <p><strong>رقم الفاتورة:</strong> {{ income.invoice_number }}</p>
+          <p><strong>تاريخ الإنشاء:</strong> {{ income.date }}</p>
+          <p><strong>المبلغ الحالي:</strong> {{ "%.2f"|format(income.amount) }} MAD</p>
+          
+          {% if income.invoice_number %}
+          <a href="/income/{{ income.id }}/invoice" class="btn btn-sm btn-info w-100 mt-3" target="_blank">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+            </svg>
+            عرض الفاتورة
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="card mt-3">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="card-title mb-0">⚠️ تنبيه</h5>
+        </div>
+        <div class="card-body">
+          <p class="mb-0"><small>تعديل المدخول سيقوم بتحديث المهمة المرتبطة به تلقائياً.</small></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

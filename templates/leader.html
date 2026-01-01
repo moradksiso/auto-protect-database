@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+{% block title %}Expenses{% endblock %}
+{% block content %}
+<h1 class="mb-4">
+  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="me-2" viewBox="0 0 16 16" style="vertical-align: middle;">
+    <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1H1zm7 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+    <path d="M0 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V5zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V7a2 2 0 0 1-2-2H3z"/>
+  </svg>
+  مصروفات تغليف السيارات (Expenses)
+</h1>
+
+<div class="row">
+  {% if not is_agent %}
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-info text-white">
+        <h5 class="card-title mb-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+            <path d="M1.92.506a.5.5 0 0 1 .434.14L3 1.293l.646-.647a.5.5 0 0 1 .708 0L5 1.293l.646-.647a.5.5 0 0 1 .708 0L7 1.293l.646-.647a.5.5 0 0 1 .708 0L9 1.293l.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .801.13l.5 1A.5.5 0 0 1 15 2v12a.5.5 0 0 1-.053.224l-.5 1a.5.5 0 0 1-.8.13L13 14.707l-.646.647a.5.5 0 0 1-.708 0L11 14.707l-.646.647a.5.5 0 0 1-.708 0L9 14.707l-.646.647a.5.5 0 0 1-.708 0L7 14.707l-.646.647a.5.5 0 0 1-.708 0L5 14.707l-.646.647a.5.5 0 0 1-.708 0L3 14.707l-.646.647a.5.5 0 0 1-.801-.13l-.5-1A.5.5 0 0 1 1 14V2a.5.5 0 0 1 .053-.224l.5-1a.5.5 0 0 1 .367-.27zm.217 1.338L2 2.118v11.764l.137.274.51-.51a.5.5 0 0 1 .707 0l.646.647.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.509.509.137-.274V2.118l-.137-.274-.51.51a.5.5 0 0 1-.707 0L12 1.707l-.646.647a.5.5 0 0 1-.708 0L10 1.707l-.646.647a.5.5 0 0 1-.708 0L8 1.707l-.646.647a.5.5 0 0 1-.708 0L6 1.707l-.646.647a.5.5 0 0 1-.708 0L4 1.707l-.646.647a.5.5 0 0 1-.708 0l-.509-.51z"/>
+            <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zm8-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/>
+          </svg>
+          إضافة مصروف (Add Expense)
+        </h5>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-2">
+            <label class="form-label">الموظف (Agent) *</label>
+            <select class="form-select" name="agent_id" required>
+              {% for a in agents %}
+              <option value="{{ a.id }}">{{ a.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">المبلغ (Amount) * - درهم مغربي (MAD)</label>
+            <input class="form-control" name="amount" type="number" step="0.01" required placeholder="0.00">
+            <small class="text-muted">مثال: مواد تغليف، أدوات، مصاريف نقل - أدخل المبلغ بالدرهم المغربي</small>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">التاريخ (Date)</label>
+            <input class="form-control" type="date" name="date">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">وصف المصروف (Description)</label>
+            <textarea class="form-control" name="note" rows="2" placeholder="مثال: شراء فينيل تغليف، تكلفة نقل، إلخ..."></textarea>
+          </div>
+          <button class="btn btn-info btn-lg w-100" type="submit">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            إضافة المصروف
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="{% if is_agent %}col-md-12{% else %}col-md-6{% endif %}">
+    <div class="card">
+      <div class="card-header bg-{% if is_agent %}success{% else %}info{% endif %} text-white">
+        <h5 class="card-title mb-0">{% if is_agent %}إجمالي مشترياتي (My Total Expenses){% else %}Monthly Totals & Downloads{% endif %}</h5>
+      </div>
+      <div class="card-body">
+        {% if is_agent %}
+        <div class="alert alert-success mb-3">
+          <h4 class="mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+              <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1H1zm7 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+              <path d="M0 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V5zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V7a2 2 0 0 1-2-2H3z"/>
+            </svg>
+            إجمالي مشترياتي (My Total Expenses)
+          </h4>
+          <h2 class="mb-0">{{ "%.2f"|format(total_agent_expenses) }} درهم (MAD)</h2>
+          <small class="text-muted">جميع الأوقات - All Time</small>
+        </div>
+        {% endif %}
+        <ul class="list-group">
+        {% if monthly %}
+          {% for m in monthly %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <span class="fw-bold">{{ m.month }}</span>
+              <br>
+              <small class="text-muted">الإجمالي: {{ "%.2f"|format(m.amount) }} درهم (MAD)</small>
+            </div>
+            <a href="/leader/download/{{ m.month }}" class="btn btn-sm btn-success">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+              </svg>
+              Excel
+            </a>
+          </li>
+          {% endfor %}
+        {% else %}
+          <li class="list-group-item text-muted">No data</li>
+        {% endif %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Search & Filter -->
+{% if not is_agent %}
+<div class="card mt-4">
+  <div class="card-header bg-secondary text-white">
+    <h5 class="card-title mb-0">🔍 Search & Filter</h5>
+  </div>
+  <div class="card-body">
+    <form method="get" action="/leader" class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">من تاريخ (From Date)</label>
+        <input type="date" class="form-control" name="from_date" value="{{ request.args.get('from_date', '') }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">إلى تاريخ (To Date)</label>
+        <input type="date" class="form-control" name="to_date" value="{{ request.args.get('to_date', '') }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">الموظف (Agent)</label>
+        <select class="form-select" name="agent_id">
+          <option value="">جميع الموظفين</option>
+          {% for a in agents %}
+          <option value="{{ a.id }}" {% if request.args.get('agent_id') == a.id|string %}selected{% endif %}>{{ a.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">&nbsp;</label>
+        <div>
+          <button type="submit" class="btn btn-primary">بحث</button>
+          <a href="/leader" class="btn btn-outline-secondary">مسح</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<!-- المشتريات مجمعة حسب الشهر -->
+<h3 class="mt-5 mb-3">
+  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+    <path d="M4 .5a.5.5 0 0 0-1 0V1H2a2 2 0 0 0-2 2v1h16V3a2 2 0 0 0-2-2h-1V.5a.5.5 0 0 0-1 0V1H4V.5zm5.402 9.746c.625 0 1.184-.484 1.184-1.18 0-.832-.527-1.23-1.16-1.23-.586 0-1.168.387-1.168 1.21 0 .817.582 1.2 1.144 1.2z"/>
+    <path d="M16 14V5H0v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2zm-6.664-1.21c-1.11 0-1.656-.767-1.703-1.407h.683c.043.37.387.82 1.051.82.844 0 1.301-.848 1.305-2.164h-.027c-.153.414-.637.79-1.383.79-.852 0-1.676-.61-1.676-1.77 0-1.137.871-1.809 1.797-1.809 1.172 0 1.953.734 1.953 2.668 0 1.805-.742 2.871-2 2.871zm-2.89-5.435v5.332H5.77V8.079h-.012c-.29.156-.883.52-1.258.777V8.16a12.6 12.6 0 0 1 1.313-.805h.632z"/>
+  </svg>
+  المشتريات حسب الشهر (Expenses by Month)
+</h3>
+
+{% if purchases_by_month %}
+  {% for month_data in purchases_by_month %}
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+          </svg>
+          📅 {{ month_data.month_display }}
+        </h5>
+        <h4 class="mb-0">
+          <span class="badge bg-light text-dark" style="font-size: 1.1rem;">
+            <strong>{{ "%.2f"|format(month_data.total) }}</strong> درهم
+          </span>
+        </h4>
+      </div>
+    </div>
+    <div class="card-body">
+      {% if not is_agent %}
+      <!-- عرض المشتريات مجمعة حسب الموظف -->
+      <div class="row mb-3">
+        {% for agent_id, agent_data in month_data.by_agent.items() %}
+        <div class="col-md-6 mb-3">
+          <div class="alert alert-info mb-0">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+                  <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                  <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                </svg>
+                <strong>{{ agent_data.name }}</strong>
+                <small class="text-muted">({{ agent_data.purchases|length }} مشتريات)</small>
+              </div>
+              <h5 class="mb-0"><strong>{{ "%.2f"|format(agent_data.total) }}</strong> درهم</h5>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <hr>
+      {% endif %}
+      
+      <!-- جدول تفاصيل المشتريات -->
+      <div class="table-responsive">
+        <table class="table table-hover table-sm">
+          <thead class="table-light">
+            <tr>
+              <th>التاريخ</th>
+              {% if not is_agent %}<th>الموظف</th>{% endif %}
+              <th>المبلغ (درهم)</th>
+              <th>الوصف</th>
+              {% if not is_agent %}<th>إجراءات</th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+          {% for p in month_data.purchases %}
+          <tr>
+            <td><small>{{ p.date }}</small></td>
+            {% if not is_agent %}
+            <td>
+              {% if p.agent_id %}
+                {% set agent = agents|selectattr('id', 'equalto', p.agent_id)|first %}
+                <span class="badge bg-secondary">{{ agent.name if agent else 'N/A' }}</span>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            {% endif %}
+            <td><strong>{{ "%.2f"|format(p.amount) }}</strong> درهم</td>
+            <td><small>{{ p.note or '-' }}</small></td>
+            {% if not is_agent %}
+            <td>
+              <div class="btn-group btn-group-sm">
+                <a href="/leader/{{ p.id }}/edit" class="btn btn-sm btn-outline-primary" title="تعديل">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                  </svg>
+                </a>
+                <form method="post" action="/leader/{{ p.id }}/delete" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا المصروف؟');">
+                  <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                      <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                    </svg>
+                  </button>
+                </form>
+              </div>
+            </td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card-footer bg-light">
+      <div class="d-flex justify-content-between align-items-center">
+        <small class="text-muted">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+          </svg>
+          عدد المشتريات: <strong>{{ month_data.purchases|length }}</strong>
+        </small>
+        <span class="badge bg-primary" style="font-size: 0.95rem;">
+          الإجمالي الشهري: <strong>{{ "%.2f"|format(month_data.total) }}</strong> د.م
+        </span>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="alert alert-info">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+      <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+    </svg>
+    لا توجد مشتريات حتى الآن
+  </div>
+{% endif %}
+{% endblock %}
