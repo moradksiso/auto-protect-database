@@ -1448,7 +1448,7 @@ def settings():
         action = request.form.get('action')
         
         if action == 'backup':
-            # Create backup of database
+            # Create comprehensive backup with all data
             import shutil
             backup_name = f"backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
             backup_dir = os.path.join(os.path.dirname(__file__), 'backups')
@@ -1456,14 +1456,114 @@ def settings():
                 os.makedirs(backup_dir)
             backup_path = os.path.join(backup_dir, backup_name)
             db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
+            
+            # Copy database file
             shutil.copy(db_path, backup_path)
             
+            # Verify backup contains all data
+            import sqlite3
+            conn = sqlite3.connect(backup_path)
+            cursor = conn.cursor()
+            
+            # Check all tables exist and count records
+            tables_info = {}
+            for table in ['agent', 'task', 'purchase', 'income', 'admin', 'file_upload', 'log', 'api_token', 'service_type', 'car_type']:
+                try:
+                    cursor.execute(f"SELECT COUNT(*) FROM {table}")
+                    count = cursor.fetchone()[0]
+                    tables_info[table] = count
+                except:
+                    tables_info[table] = 0
+            
+            conn.close()
+            
+            # Create backup info file
+            info_path = os.path.join(backup_dir, f"backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}_info.txt")
+            with open(info_path, 'w', encoding='utf-8') as f:
+                f.write(f"النسخة الاحتياطية: {backup_name}\n")
+                f.write(f"التاريخ: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write(f"حجم الملف: {os.path.getsize(backup_path) / 1024 / 1024:.2f} MB\n\n")
+                f.write("محتويات النسخة الاحتياطية:\n")
+                f.write(f"  - الموظفين (agent): {tables_info.get('agent', 0)} سجل\n")
+                f.write(f"  - المهام (task): {tables_info.get('task', 0)} سجل\n")
+                f.write(f"  - المشتريات (purchase): {tables_info.get('purchase', 0)} سجل\n")
+                f.write(f"  - المداخيل (income): {tables_info.get('income', 0)} سجل\n")
+                f.write(f"  - المسؤولين (admin): {tables_info.get('admin', 0)} سجل\n")
+                f.write(f"  - الملفات (file_upload): {tables_info.get('file_upload', 0)} سجل\n")
+                f.write(f"  - السجلات (log): {tables_info.get('log', 0)} سجل\n")
+                f.write(f"  - API Tokens: {tables_info.get('api_token', 0)} سجل\n")
+                f.write(f"  - أنواع الخدمات (service_type): {tables_info.get('service_type', 0)} سجل\n")
+                f.write(f"  - أنواع السيارات (car_type): {tables_info.get('car_type', 0)} سجل\n")
+            
             if isinstance(current_user, Admin):
-                db.session.add(Log(action='backup_database', detail=f'Created backup: {backup_name}', created_by=current_user.id))
+                detail = f'Created backup: {backup_name} | Agents: {tables_info.get("agent", 0)}, Tasks: {tables_info.get("task", 0)}, Purchases: {tables_info.get("purchase", 0)}, Income: {tables_info.get("income", 0)}'
+                db.session.add(Log(action='backup_database', detail=detail, created_by=current_user.id))
                 db.session.commit()
             
             flash(f'✅ تم إنشاء النسخة الاحتياطية: {backup_name}')
+            flash(f'📊 المحتويات: {tables_info.get("agent", 0)} موظف | {tables_info.get("task", 0)} مهمة | {tables_info.get("purchase", 0)} مشترى | {tables_info.get("income", 0)} مدخول')
             return send_file(backup_path, download_name=backup_name, as_attachment=True)
+        
+        elif action == 'backup_full':
+            # Create full backup including database and uploads folder
+            import shutil
+            import tempfile
+            
+            backup_name = f"full_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            backup_dir = os.path.join(os.path.dirname(__file__), 'backups')
+            if not os.path.exists(backup_dir):
+                os.makedirs(backup_dir)
+            
+            # Create temporary directory for full backup
+            temp_dir = tempfile.mkdtemp()
+            temp_backup_dir = os.path.join(temp_dir, backup_name)
+            os.makedirs(temp_backup_dir)
+            
+            try:
+                # Copy database
+                db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
+                shutil.copy(db_path, os.path.join(temp_backup_dir, 'database.db'))
+                
+                # Copy uploads folder if exists
+                uploads_dir = os.path.join(os.path.dirname(__file__), 'uploads')
+                if os.path.exists(uploads_dir):
+                    shutil.copytree(uploads_dir, os.path.join(temp_backup_dir, 'uploads'))
+                
+                # Create info file
+                info_path = os.path.join(temp_backup_dir, 'backup_info.txt')
+                with open(info_path, 'w', encoding='utf-8') as f:
+                    f.write(f"نسخة احتياطية شاملة\n")
+                    f.write(f"التاريخ: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+                    f.write(f"المحتويات:\n")
+                    f.write(f"  - قاعدة البيانات: database.db\n")
+                    f.write(f"  - مجلد الملفات المرفوعة: uploads/\n\n")
+                    f.write(f"البيانات:\n")
+                    f.write(f"  - الموظفين: {Agent.query.count()}\n")
+                    f.write(f"  - المهام: {Task.query.count()}\n")
+                    f.write(f"  - المشتريات: {Purchase.query.count()}\n")
+                    f.write(f"  - المداخيل: {Income.query.count()}\n")
+                    f.write(f"  - الملفات المرفوعة: {FileUpload.query.count()}\n")
+                
+                # Create zip file
+                zip_path = os.path.join(backup_dir, f"{backup_name}.zip")
+                shutil.make_archive(os.path.join(backup_dir, backup_name), 'zip', temp_dir)
+                
+                # Cleanup
+                shutil.rmtree(temp_dir)
+                
+                if isinstance(current_user, Admin):
+                    db.session.add(Log(action='full_backup', detail=f'Created full backup: {backup_name}.zip', created_by=current_user.id))
+                    db.session.commit()
+                
+                flash(f'✅ تم إنشاء النسخة الاحتياطية الشاملة: {backup_name}.zip')
+                flash(f'📁 تحتوي على: قاعدة البيانات + جميع الملفات المرفوعة')
+                return send_file(zip_path, download_name=f"{backup_name}.zip", as_attachment=True)
+            
+            except Exception as e:
+                if os.path.exists(temp_dir):
+                    shutil.rmtree(temp_dir)
+                flash(f'❌ خطأ في إنشاء النسخة الاحتياطية الشاملة: {str(e)}')
+                return redirect(url_for('settings'))
         
         elif action == 'restore':
             # Restore database from uploaded backup
@@ -1476,15 +1576,13 @@ def settings():
                 flash('❌ لم يتم اختيار ملف')
                 return redirect(url_for('settings'))
             
-            if not file.filename.endswith('.db'):
-                flash('❌ يجب أن يكون الملف بصيغة .db')
+            if not (file.filename.endswith('.db') or file.filename.endswith('.zip')):
+                flash('❌ يجب أن يكون الملف بصيغة .db أو .zip')
                 return redirect(url_for('settings'))
             
             try:
                 import shutil
-                # Save uploaded file temporarily
-                temp_path = os.path.join(os.path.dirname(__file__), 'temp_restore.db')
-                file.save(temp_path)
+                import sqlite3
                 
                 # Backup current database before restoring
                 backup_name = f"backup_before_restore_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
@@ -1495,20 +1593,115 @@ def settings():
                 db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
                 shutil.copy(db_path, backup_path)
                 
-                # Close database connections
-                db.session.close()
-                db.engine.dispose()
+                if file.filename.endswith('.zip'):
+                    # Full backup restore
+                    import zipfile
+                    import tempfile
+                    
+                    temp_dir = tempfile.mkdtemp()
+                    zip_path = os.path.join(temp_dir, 'backup.zip')
+                    file.save(zip_path)
+                    
+                    # Extract zip
+                    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                        zip_ref.extractall(temp_dir)
+                    
+                    # Find database file
+                    db_file = None
+                    for root, dirs, files in os.walk(temp_dir):
+                        for f in files:
+                            if f == 'database.db' or f.endswith('.db'):
+                                db_file = os.path.join(root, f)
+                                break
+                        if db_file:
+                            break
+                    
+                    if not db_file:
+                        shutil.rmtree(temp_dir)
+                        flash('❌ لم يتم العثور على قاعدة البيانات في الملف المضغوط')
+                        return redirect(url_for('settings'))
+                    
+                    # Verify database integrity
+                    try:
+                        conn = sqlite3.connect(db_file)
+                        cursor = conn.cursor()
+                        cursor.execute("SELECT COUNT(*) FROM agent")
+                        agents_count = cursor.fetchone()[0]
+                        cursor.execute("SELECT COUNT(*) FROM task")
+                        tasks_count = cursor.fetchone()[0]
+                        cursor.execute("SELECT COUNT(*) FROM purchase")
+                        purchases_count = cursor.fetchone()[0]
+                        cursor.execute("SELECT COUNT(*) FROM income")
+                        income_count = cursor.fetchone()[0]
+                        conn.close()
+                    except Exception as e:
+                        shutil.rmtree(temp_dir)
+                        flash(f'❌ قاعدة البيانات تالفة: {str(e)}')
+                        return redirect(url_for('settings'))
+                    
+                    # Close database connections
+                    db.session.close()
+                    db.engine.dispose()
+                    
+                    # Replace database
+                    shutil.copy(db_file, db_path)
+                    
+                    # Restore uploads folder if exists
+                    uploads_dir = os.path.join(os.path.dirname(__file__), 'uploads')
+                    for root, dirs, files in os.walk(temp_dir):
+                        if 'uploads' in dirs:
+                            backup_uploads = os.path.join(root, 'uploads')
+                            if os.path.exists(uploads_dir):
+                                shutil.rmtree(uploads_dir)
+                            shutil.copytree(backup_uploads, uploads_dir)
+                            break
+                    
+                    shutil.rmtree(temp_dir)
+                    
+                    flash(f'✅ تم استعادة النسخة الاحتياطية الشاملة')
+                    flash(f'📊 تمت استعادة: {agents_count} موظف | {tasks_count} مهمة | {purchases_count} مشترى | {income_count} مدخول')
+                    flash(f'💾 تم حفظ نسخة احتياطية من البيانات الحالية: {backup_name}')
                 
-                # Replace database with restored file
-                shutil.copy(temp_path, db_path)
-                os.remove(temp_path)
+                else:
+                    # Database only restore
+                    temp_path = os.path.join(os.path.dirname(__file__), 'temp_restore.db')
+                    file.save(temp_path)
+                    
+                    # Verify database integrity
+                    try:
+                        import sqlite3
+                        conn = sqlite3.connect(temp_path)
+                        cursor = conn.cursor()
+                        cursor.execute("SELECT COUNT(*) FROM agent")
+                        agents_count = cursor.fetchone()[0]
+                        cursor.execute("SELECT COUNT(*) FROM task")
+                        tasks_count = cursor.fetchone()[0]
+                        cursor.execute("SELECT COUNT(*) FROM purchase")
+                        purchases_count = cursor.fetchone()[0]
+                        cursor.execute("SELECT COUNT(*) FROM income")
+                        income_count = cursor.fetchone()[0]
+                        conn.close()
+                    except Exception as e:
+                        os.remove(temp_path)
+                        flash(f'❌ قاعدة البيانات تالفة أو غير متوافقة: {str(e)}')
+                        return redirect(url_for('settings'))
+                    
+                    # Close database connections
+                    db.session.close()
+                    db.engine.dispose()
+                    
+                    # Replace database with restored file
+                    shutil.copy(temp_path, db_path)
+                    os.remove(temp_path)
+                    
+                    flash(f'✅ تم استعادة قاعدة البيانات من: {file.filename}')
+                    flash(f'📊 تمت استعادة: {agents_count} موظف | {tasks_count} مهمة | {purchases_count} مشترى | {income_count} مدخول')
+                    flash(f'💾 تم حفظ نسخة احتياطية من قاعدة البيانات الحالية: {backup_name}')
                 
                 if isinstance(current_user, Admin):
                     db.session.add(Log(action='restore_database', detail=f'Restored from: {file.filename}', created_by=current_user.id))
                     db.session.commit()
                 
-                flash(f'✅ تم استعادة قاعدة البيانات من: {file.filename}')
-                flash(f'💾 تم حفظ نسخة احتياطية من قاعدة البيانات الحالية: {backup_name}')
                 return redirect(url_for('admin_dashboard'))
             
             except Exception as e:
@@ -1602,14 +1795,36 @@ def settings():
     backups = []
     if os.path.exists(backup_dir):
         for filename in sorted(os.listdir(backup_dir), reverse=True):
-            if filename.endswith('.db'):
+            if filename.endswith('.db') or filename.endswith('.zip'):
                 file_path = os.path.join(backup_dir, filename)
                 file_size = os.path.getsize(file_path) / 1024 / 1024  # MB
                 file_time = datetime.fromtimestamp(os.path.getmtime(file_path))
+                
+                # Get backup details if it's a database file
+                backup_info = {}
+                if filename.endswith('.db'):
+                    try:
+                        import sqlite3
+                        conn = sqlite3.connect(file_path)
+                        cursor = conn.cursor()
+                        cursor.execute("SELECT COUNT(*) FROM agent")
+                        backup_info['agents'] = cursor.fetchone()[0]
+                        cursor.execute("SELECT COUNT(*) FROM task")
+                        backup_info['tasks'] = cursor.fetchone()[0]
+                        cursor.execute("SELECT COUNT(*) FROM purchase")
+                        backup_info['purchases'] = cursor.fetchone()[0]
+                        cursor.execute("SELECT COUNT(*) FROM income")
+                        backup_info['income'] = cursor.fetchone()[0]
+                        conn.close()
+                    except:
+                        backup_info = None
+                
                 backups.append({
                     'filename': filename,
                     'size': file_size,
-                    'date': file_time
+                    'date': file_time,
+                    'info': backup_info,
+                    'type': 'شامل (قاعدة بيانات + ملفات)' if filename.endswith('.zip') else 'قاعدة بيانات فقط'
                 })
     
     return render_template('settings.html', db_size=db_size, counts=counts, backups=backups)
