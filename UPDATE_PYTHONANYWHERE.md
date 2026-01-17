@@ -23,12 +23,17 @@
    git pull origin main
    ```
 
-4. **أعد تحميل التطبيق**
+4. **⚠️ مهم جداً: أعد تحميل التطبيق**
    - اذهب إلى تبويب **Web**
    - ابحث عن التطبيق الخاص بك
-   - اضغط زر **Reload** الأخضر الكبير
+   - اضغط زر **Reload** الأخضر الكبير في أعلى الصفحة
+   - انتظر حتى تظهر رسالة "All done!"
 
-5. **✅ تم!** زر موقعك للتأكد من التحديثات
+5. **امسح Cache المتصفح**
+   - Windows/Linux: اضغط **Ctrl+Shift+R**
+   - Mac: اضغط **Cmd+Shift+R**
+
+6. **✅ تم!** زر موقعك للتأكد من التحديثات
 
 ---
 
@@ -80,6 +85,16 @@
 
 ## 🐛 حل المشاكل
 
+### ⛔ التحديثات لم تظهر بعد git pull؟
+
+**السبب:** لم يتم إعادة تشغيل التطبيق
+
+**الحل (الأهم):**
+1. اذهب إلى تبويب **Web** في PythonAnywhere
+2. اضغط زر **Reload** الأخضر الكبير في أعلى الصفحة
+3. انتظر حتى تظهر رسالة "All done!" أو "Reloaded successfully"
+4. في المتصفح، أعد تحميل الصفحة بـ **Ctrl+Shift+R** (لمسح الكاش)
+
 ### إذا واجهت خطأ عند git pull:
 ```bash
 git stash
@@ -87,19 +102,19 @@ git pull origin main
 git stash pop
 ```
 
-### إذا لم تظهر التحديثات:
-1. تأكد من Reload التطبيق
-2. امسح Cache المتصفح (Ctrl+F5)
-3. تحقق من Logs في PythonAnywhere
-
-### إذا كان هناك خطأ في قاعدة البيانات:
+### إذا ظهر خطأ في قاعدة البيانات (no such column):
 ```bash
 cd ~/auto-protect-database
-python3 manage.py shell
->>> from app import db
->>> db.create_all()
->>> exit()
+source venv/bin/activate
+python3 -c "from app import create_tables; create_tables()"
 ```
+ثم اذهب لتبويب Web واضغط Reload
+
+### إذا لم تظهر التحديثات بعد كل ذلك:
+1. تحقق من **Error log** في تبويب Web
+2. تحقق من **Server log** في تبويب Web
+3. ابحث عن أخطاء باللون الأحمر
+4. تأكد أن git pull أظهر تحديثات جديدة
 
 ---
 
