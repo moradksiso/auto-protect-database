@@ -1,78 +1,171 @@
 {% extends 'base.html' %}
 {% block title %}الإعدادات{% endblock %}
 {% block content %}
-<h1 class="mb-4">⚙️ إعدادات التطبيق</h1>
+<h1 class="mb-4" style="color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: 700;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-gear-fill" viewBox="0 0 16 16" style="vertical-align: middle;">
+    <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
+  </svg>
+  ⚙️ إعدادات التطبيق
+</h1>
 
 <div class="row">
   <!-- Database Info -->
   <div class="col-md-6 mb-4">
-    <div class="card">
-      <div class="card-header bg-primary text-white">
+    <div class="card shadow-sm">
+      <div class="card-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
         <h5 class="mb-0">📊 معلومات قاعدة البيانات</h5>
       </div>
       <div class="card-body">
         <table class="table table-sm">
           <tr>
             <th>حجم قاعدة البيانات:</th>
-            <td>{{ "%.2f"|format(db_size) }} MB</td>
+            <td><span class="badge bg-info">{{ "%.2f"|format(db_size) }} MB</span></td>
           </tr>
           <tr>
             <th>عدد الموظفين:</th>
-            <td>{{ counts.agents }}</td>
+            <td><span class="badge bg-primary">{{ counts.agents }}</span></td>
           </tr>
           <tr>
             <th>عدد المشتريات:</th>
-            <td>{{ counts.purchases }}</td>
+            <td><span class="badge bg-danger">{{ counts.purchases }}</span></td>
           </tr>
           <tr>
             <th>عدد المداخيل:</th>
-            <td>{{ counts.income }}</td>
+            <td><span class="badge bg-success">{{ counts.income }}</span></td>
           </tr>
           <tr>
             <th>عدد المهام:</th>
-            <td>{{ counts.tasks }}</td>
+            <td><span class="badge bg-warning text-dark">{{ counts.tasks }}</span></td>
           </tr>
           <tr>
             <th>عدد السجلات:</th>
-            <td>{{ counts.logs }}</td>
+            <td><span class="badge bg-secondary">{{ counts.logs }}</span></td>
           </tr>
           <tr>
             <th>الملفات المرفوعة:</th>
-            <td>{{ counts.files }}</td>
+            <td><span class="badge bg-info">{{ counts.files }}</span></td>
           </tr>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- Backup -->
+  <!-- Backup & Restore -->
   <div class="col-md-6 mb-4">
-    <div class="card">
-      <div class="card-header bg-success text-white">
-        <h5 class="mb-0">💾 النسخ الاحتياطي</h5>
+    <div class="card shadow-sm">
+      <div class="card-header text-white" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+        <h5 class="mb-0">💾 النسخ الاحتياطي والاستعادة</h5>
       </div>
       <div class="card-body">
-        <p>قم بتحميل نسخة احتياطية من قاعدة البيانات</p>
-        <form method="post">
+        <!-- Create Backup -->
+        <h6 class="mb-3">✅ إنشاء نسخة احتياطية جديدة</h6>
+        <form method="post" class="mb-4">
           <input type="hidden" name="action" value="backup">
-          <button type="submit" class="btn btn-success">
+          <button type="submit" class="btn btn-success w-100">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
               <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
               <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
             </svg>
-            تحميل نسخة احتياطية
+            تحميل نسخة احتياطية (.db)
+          </button>
+        </form>
+        
+        <hr>
+        
+        <!-- Restore Backup -->
+        <h6 class="mb-3">🔄 استعادة من نسخة احتياطية</h6>
+        <form method="post" enctype="multipart/form-data" onsubmit="return confirm('⚠️ تحذير: سيتم استبدال جميع البيانات الحالية بالنسخة الاحتياطية. هل أنت متأكد؟');">
+          <input type="hidden" name="action" value="restore">
+          <div class="mb-3">
+            <input type="file" class="form-control" name="backup_file" accept=".db" required>
+            <small class="text-muted">اختر ملف .db فقط</small>
+          </div>
+          <button type="submit" class="btn btn-warning w-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/>
+              <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/>
+            </svg>
+            استعادة قاعدة البيانات
           </button>
         </form>
         
         <div class="alert alert-warning mt-3 mb-0">
-          <small><strong>ملاحظة:</strong> احفظ النسخة الاحتياطية في مكان آمن</small>
+          <small><strong>⚠️ ملاحظة هامة:</strong> عند الاستعادة، سيتم حفظ نسخة احتياطية تلقائية من قاعدة البيانات الحالية قبل الاستبدال</small>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Application Info -->
+<!-- Export Excel -->
+<div class="row">
+  <div class="col-md-12 mb-4">
+    <div class="card shadow-sm">
+      <div class="card-header text-white" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">
+        <h5 class="mb-0">📊 تصدير البيانات إلى Excel</h5>
+      </div>
+      <div class="card-body">
+        <p>تصدير جميع البيانات (الموظفين، المهام، المشتريات، المداخيل) إلى ملف Excel واحد</p>
+        <form method="post" class="d-inline">
+          <input type="hidden" name="action" value="export_excel">
+          <button type="submit" class="btn btn-success">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-excel" viewBox="0 0 16 16">
+              <path d="M5.884 6.68a.5.5 0 1 0-.768.64L7.349 10l-2.233 2.68a.5.5 0 0 0 .768.64L8 10.781l2.116 2.54a.5.5 0 0 0 .768-.641L8.651 10l2.233-2.68a.5.5 0 0 0-.768-.64L8 9.219l-2.116-2.54z"/>
+              <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+            </svg>
+            تصدير إلى Excel (.xlsx)
+          </button>
+        </form>
+        <div class="alert alert-info mt-3 mb-0">
+          <small><strong>💡 فائدة:</strong> يمكنك فتح ملف Excel ومراجعة البيانات بسهولة، أو طباعتها، أو مشاركتها</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Existing Backups List -->
+{% if backups %}
+<div class="row">
+  <div class="col-md-12 mb-4">
+    <div class="card shadow-sm">
+      <div class="card-header text-white" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+        <h5 class="mb-0">📁 النسخ الاحتياطية المحفوظة</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>اسم الملف</th>
+                <th>الحجم</th>
+                <th>التاريخ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for backup in backups %}
+              <tr>
+                <td>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-database" viewBox="0 0 16 16">
+                    <path d="M4.318 2.687C5.234 2.271 6.536 2 8 2s2.766.27 3.682.687C12.644 3.125 13 3.627 13 4c0 .374-.356.875-1.318 1.313C10.766 5.729 9.464 6 8 6s-2.766-.27-3.682-.687C3.356 4.875 3 4.373 3 4c0-.374.356-.875 1.318-1.313ZM13 5.698V7c0 .374-.356.875-1.318 1.313C10.766 8.729 9.464 9 8 9s-2.766-.27-3.682-.687C3.356 7.875 3 7.373 3 7V5.698c.271.202.58.378.904.525C4.978 6.711 6.427 7 8 7s3.022-.289 4.096-.777A4.92 4.92 0 0 0 13 5.698ZM14 4c0-1.007-.875-1.755-1.904-2.223C11.022 1.289 9.573 1 8 1s-3.022.289-4.096.777C2.875 2.245 2 2.993 2 4v9c0 1.007.875 1.755 1.904 2.223C4.978 15.71 6.427 16 8 16s3.022-.289 4.096-.777C13.125 14.755 14 14.007 14 13V4Zm-1 4.698V10c0 .374-.356.875-1.318 1.313C10.766 11.729 9.464 12 8 12s-2.766-.27-3.682-.687C3.356 10.875 3 10.373 3 10V8.698c.271.202.58.378.904.525C4.978 9.71 6.427 10 8 10s3.022-.289 4.096-.777A4.92 4.92 0 0 0 13 8.698Zm0 3V13c0 .374-.356.875-1.318 1.313C10.766 14.729 9.464 15 8 15s-2.766-.27-3.682-.687C3.356 13.875 3 13.373 3 13v-1.302c.271.202.58.378.904.525C4.978 12.71 6.427 13 8 13s3.022-.289 4.096-.777c.324-.147.633-.323.904-.525Z"/>
+                  </svg>
+                  {{ backup.filename }}
+                </td>
+                <td><span class="badge bg-secondary">{{ "%.2f"|format(backup.size) }} MB</span></td>
+                <td>{{ backup.date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="alert alert-info mb-0">
+          <small><strong>📂 موقع الملفات:</strong> مجلد backups/ في مجلد التطبيق</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
 <div class="row">
   <div class="col-md-12">
     <div class="card">

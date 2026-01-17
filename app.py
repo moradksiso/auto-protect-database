@@ -1450,9 +1450,11 @@ def settings():
         if action == 'backup':
             # Create backup of database
             import shutil
-            from datetime import datetime
             backup_name = f"backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
-            backup_path = os.path.join(os.path.dirname(app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')), backup_name)
+            backup_dir = os.path.join(os.path.dirname(__file__), 'backups')
+            if not os.path.exists(backup_dir):
+                os.makedirs(backup_dir)
+            backup_path = os.path.join(backup_dir, backup_name)
             db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
             shutil.copy(db_path, backup_path)
             
@@ -1460,7 +1462,126 @@ def settings():
                 db.session.add(Log(action='backup_database', detail=f'Created backup: {backup_name}', created_by=current_user.id))
                 db.session.commit()
             
+            flash(f'✅ تم إنشاء النسخة الاحتياطية: {backup_name}')
             return send_file(backup_path, download_name=backup_name, as_attachment=True)
+        
+        elif action == 'restore':
+            # Restore database from uploaded backup
+            if 'backup_file' not in request.files:
+                flash('❌ لم يتم اختيار ملف')
+                return redirect(url_for('settings'))
+            
+            file = request.files['backup_file']
+            if file.filename == '':
+                flash('❌ لم يتم اختيار ملف')
+                return redirect(url_for('settings'))
+            
+            if not file.filename.endswith('.db'):
+                flash('❌ يجب أن يكون الملف بصيغة .db')
+                return redirect(url_for('settings'))
+            
+            try:
+                import shutil
+                # Save uploaded file temporarily
+                temp_path = os.path.join(os.path.dirname(__file__), 'temp_restore.db')
+                file.save(temp_path)
+                
+                # Backup current database before restoring
+                backup_name = f"backup_before_restore_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
+                backup_dir = os.path.join(os.path.dirname(__file__), 'backups')
+                if not os.path.exists(backup_dir):
+                    os.makedirs(backup_dir)
+                backup_path = os.path.join(backup_dir, backup_name)
+                db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
+                shutil.copy(db_path, backup_path)
+                
+                # Close database connections
+                db.session.close()
+                db.engine.dispose()
+                
+                # Replace database with restored file
+                shutil.copy(temp_path, db_path)
+                os.remove(temp_path)
+                
+                if isinstance(current_user, Admin):
+                    db.session.add(Log(action='restore_database', detail=f'Restored from: {file.filename}', created_by=current_user.id))
+                    db.session.commit()
+                
+                flash(f'✅ تم استعادة قاعدة البيانات من: {file.filename}')
+                flash(f'💾 تم حفظ نسخة احتياطية من قاعدة البيانات الحالية: {backup_name}')
+                return redirect(url_for('admin_dashboard'))
+            
+            except Exception as e:
+                flash(f'❌ خطأ في استعادة قاعدة البيانات: {str(e)}')
+                return redirect(url_for('settings'))
+        
+        elif action == 'export_excel':
+            # Export all data to Excel
+            try:
+                output = io.BytesIO()
+                with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                    # Export Agents
+                    agents = Agent.query.all()
+                    agents_df = pd.DataFrame([{
+                        'ID': a.id,
+                        'الاسم': a.name,
+                        'الهاتف': a.phone,
+                        'البريد الإلكتروني': a.email,
+                        'تاريخ الإنشاء': a.created_at
+                    } for a in agents])
+                    agents_df.to_excel(writer, sheet_name='الموظفين', index=False)
+                    
+                    # Export Tasks
+                    tasks = Task.query.all()
+                    tasks_df = pd.DataFrame([{
+                        'ID': t.id,
+                        'العنوان': t.title,
+                        'الوصف': t.description,
+                        'الموظف': t.agent.name if t.agent else '',
+                        'السعر': t.price,
+                        'عمولة الموظف': t.agent_commission,
+                        'الحالة': t.status,
+                        'تاريخ الإنشاء': t.created_at,
+                        'تاريخ الإكمال': t.completed_at
+                    } for t in tasks])
+                    tasks_df.to_excel(writer, sheet_name='المهام', index=False)
+                    
+                    # Export Purchases
+                    purchases = Purchase.query.all()
+                    purchases_df = pd.DataFrame([{
+                        'ID': p.id,
+                        'الوصف': p.description,
+                        'المبلغ': p.amount,
+                        'الموظف': p.agent.name if p.agent else '',
+                        'التاريخ': p.created_at
+                    } for p in purchases])
+                    purchases_df.to_excel(writer, sheet_name='المشتريات', index=False)
+                    
+                    # Export Income
+                    incomes = Income.query.all()
+                    incomes_df = pd.DataFrame([{
+                        'ID': i.id,
+                        'الوصف': i.description,
+                        'المبلغ': i.amount,
+                        'الخصم': i.discount,
+                        'وصف الخصم': i.discount_description,
+                        'الموظف': i.agent.name if i.agent else '',
+                        'التاريخ': i.created_at
+                    } for i in incomes])
+                    incomes_df.to_excel(writer, sheet_name='المداخيل', index=False)
+                
+                output.seek(0)
+                excel_name = f"full_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+                
+                if isinstance(current_user, Admin):
+                    db.session.add(Log(action='export_excel', detail=f'Exported all data to Excel: {excel_name}', created_by=current_user.id))
+                    db.session.commit()
+                
+                return send_file(output, download_name=excel_name, as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            
+            except Exception as e:
+                flash(f'❌ خطأ في تصدير Excel: {str(e)}')
+                return redirect(url_for('settings'))
     
     # Get database size
     db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
@@ -1476,7 +1597,22 @@ def settings():
         'files': FileUpload.query.count()
     }
     
-    return render_template('settings.html', db_size=db_size, counts=counts)
+    # Get list of existing backups
+    backup_dir = os.path.join(os.path.dirname(__file__), 'backups')
+    backups = []
+    if os.path.exists(backup_dir):
+        for filename in sorted(os.listdir(backup_dir), reverse=True):
+            if filename.endswith('.db'):
+                file_path = os.path.join(backup_dir, filename)
+                file_size = os.path.getsize(file_path) / 1024 / 1024  # MB
+                file_time = datetime.fromtimestamp(os.path.getmtime(file_path))
+                backups.append({
+                    'filename': filename,
+                    'size': file_size,
+                    'date': file_time
+                })
+    
+    return render_template('settings.html', db_size=db_size, counts=counts, backups=backups)
 
 
 @app.route('/change_password', methods=['GET','POST'])
