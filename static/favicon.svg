@@ -1,1 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" fill="#198754"/><text x="16" y="22" font-size="20" text-anchor="middle" fill="white" font-weight="bold">AP</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Sports car silhouette - no background -->
+  <g fill="#000000">
+    <!-- Car body -->
+    <path d="M 4 18 Q 4 16 6 15 L 8 14 L 9 12 Q 9.5 11 11 11 L 12 11 L 13 9 Q 13.5 8 15 8 L 17 8 Q 18.5 8 19 9 L 20 11 L 21 11 Q 22.5 11 23 12 L 24 14 L 26 15 Q 28 16 28 18 L 28 21 Q 28 22 27 22 L 26 22 Q 26 23.5 24.5 23.5 Q 23 23.5 23 22 L 9 22 Q 9 23.5 7.5 23.5 Q 6 23.5 6 22 L 5 22 Q 4 22 4 21 Z"/>
+    
+    <!-- Windshield -->
+    <path d="M 13.5 9.5 L 14.5 11.5 L 17.5 11.5 L 18.5 9.5 Z" fill="#333333" opacity="0.3"/>
+    
+    <!-- Side window -->
+    <path d="M 10 12.5 L 11 14 L 12.5 14 L 13 12.5 Z" fill="#333333" opacity="0.3"/>
+    <path d="M 19 12.5 L 20.5 14 L 22 14 L 21 12.5 Z" fill="#333333" opacity="0.3"/>
+    
+    <!-- Front wheel -->
+    <circle cx="10" cy="21" r="2.5" fill="#1a1a1a"/>
+    <circle cx="10" cy="21" r="1.2" fill="#404040"/>
+    
+    <!-- Rear wheel -->
+    <circle cx="22" cy="21" r="2.5" fill="#1a1a1a"/>
+    <circle cx="22" cy="21" r="1.2" fill="#404040"/>
+    
+    <!-- Spoiler -->
+    <rect x="24" y="16" width="2.5" height="1" rx="0.3" fill="#000000"/>
+    <rect x="24.5" y="14" width="1.5" height="2" fill="#000000"/>
+    
+    <!-- Front details -->
+    <ellipse cx="6.5" cy="17" rx="1" ry="0.8" fill="#ffeb3b" opacity="0.8"/>
+    
+    <!-- Side detail/air intake -->
+    <rect x="14" y="17" width="4" height="0.8" rx="0.2" fill="#1a1a1a"/>
+  </g>
+</svg>
