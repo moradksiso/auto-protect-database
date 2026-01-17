@@ -18,6 +18,7 @@ from translations import get_translation
 app = Flask(__name__)
 app.config.from_object('config')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['VERSION'] = '1.75'  # Application version
 
 # ensure upload folder exists
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -1888,27 +1889,486 @@ def api_token_revoke(token_id):
     db.session.commit()
     return redirect(url_for('api_tokens'))
 
-# --- Simple JSON API endpoints ---
-@app.route('/api/agents', methods=['GET','POST'])
-@login_required
+# --- Comprehensive JSON API endpoints ---
+
+# API Token authentication decorator
+def require_api_token(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'error': 'No token provided'}), 401
+        
+        if token.startswith('Bearer '):
+            token = token[7:]
+        
+        api_token = APIToken.query.filter_by(token=token, revoked=False).first()
+        if not api_token:
+            return jsonify({'error': 'Invalid or revoked token'}), 401
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+# API: Get application info and version
+@app.route('/api/info', methods=['GET'])
+@require_api_token
+def api_info():
+    """Get application information and statistics"""
+    return jsonify({
+        'app_name': 'Auto Protect Database',
+        'version': app.config.get('VERSION', '1.0'),
+        'database': {
+            'agents': Agent.query.count(),
+            'tasks': Task.query.count(),
+            'purchases': Purchase.query.count(),
+            'income': Income.query.count(),
+            'files': FileUpload.query.count()
+        },
+        'timestamp': datetime.now().isoformat()
+    })
+
+
+# API: Agents CRUD
+@app.route('/api/agents', methods=['GET', 'POST'])
+@require_api_token
 def api_agents():
+    """List all agents or create new agent"""
     if request.method == 'GET':
         agents = Agent.query.all()
-        return jsonify([{'id':a.id,'name':a.name,'phone':a.phone,'email':a.email} for a in agents])
+        return jsonify({
+            'count': len(agents),
+            'agents': [{
+                'id': a.id,
+                'name': a.name,
+                'phone': a.phone,
+                'email': a.email,
+                'created_at': a.created_at.isoformat() if a.created_at else None
+            } for a in agents]
+        })
+    
     data = request.get_json() or {}
     name = data.get('name')
     if not name:
-        return jsonify({'error':'name required'}), 400
-    a = Agent(name=name, phone=data.get('phone'), email=data.get('email'))
-    db.session.add(a)
+        return jsonify({'error': 'name required'}), 400
+    
+    agent = Agent(
+        name=name,
+        phone=data.get('phone'),
+        email=data.get('email')
+    )
+    db.session.add(agent)
     db.session.commit()
-    return jsonify({'id':a.id,'name':a.name}), 201
+    
+    return jsonify({
+        'success': True,
+        'agent': {
+            'id': agent.id,
+            'name': agent.name,
+            'phone': agent.phone,
+            'email': agent.email
+        }
+    }), 201
 
-@app.route('/api/tasks', methods=['GET'])
-@login_required
+
+@app.route('/api/agents/<int:agent_id>', methods=['GET', 'PUT', 'DELETE'])
+@require_api_token
+def api_agent_detail(agent_id):
+    """Get, update or delete specific agent"""
+    agent = Agent.query.get_or_404(agent_id)
+    
+    if request.method == 'GET':
+        return jsonify({
+            'id': agent.id,
+            'name': agent.name,
+            'phone': agent.phone,
+            'email': agent.email,
+            'created_at': agent.created_at.isoformat() if agent.created_at else None,
+            'tasks_count': Task.query.filter_by(agent_id=agent_id).count(),
+            'purchases_count': Purchase.query.filter_by(agent_id=agent_id).count(),
+            'income_count': Income.query.filter_by(agent_id=agent_id).count()
+        })
+    
+    if request.method == 'PUT':
+        data = request.get_json() or {}
+        if 'name' in data:
+            agent.name = data['name']
+        if 'phone' in data:
+            agent.phone = data['phone']
+        if 'email' in data:
+            agent.email = data['email']
+        db.session.commit()
+        return jsonify({'success': True, 'agent': {'id': agent.id, 'name': agent.name}})
+    
+    if request.method == 'DELETE':
+        db.session.delete(agent)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Agent deleted'})
+
+
+# API: Tasks CRUD
+@app.route('/api/tasks', methods=['GET', 'POST'])
+@require_api_token
 def api_tasks():
-    tasks = Task.query.all()
-    return jsonify([{'id':t.id,'title':t.title,'agent_id':t.agent_id,'due_date':str(t.due_date)} for t in tasks])
+    """List all tasks or create new task"""
+    if request.method == 'GET':
+        status = request.args.get('status')
+        agent_id = request.args.get('agent_id')
+        
+        query = Task.query
+        if status:
+            query = query.filter_by(status=status)
+        if agent_id:
+            query = query.filter_by(agent_id=int(agent_id))
+        
+        tasks = query.all()
+        return jsonify({
+            'count': len(tasks),
+            'tasks': [{
+                'id': t.id,
+                'title': t.title,
+                'description': t.description,
+                'status': t.status,
+                'price': float(t.price) if t.price else 0,
+                'agent_commission': float(t.agent_commission) if t.agent_commission else 0,
+                'agent': {'id': t.agent.id, 'name': t.agent.name} if t.agent else None,
+                'created_at': t.created_at.isoformat() if t.created_at else None,
+                'completed_at': t.completed_at.isoformat() if t.completed_at else None,
+                'due_date': t.due_date.isoformat() if t.due_date else None
+            } for t in tasks]
+        })
+    
+    data = request.get_json() or {}
+    if not data.get('title'):
+        return jsonify({'error': 'title required'}), 400
+    
+    task = Task(
+        title=data['title'],
+        description=data.get('description'),
+        agent_id=data.get('agent_id'),
+        price=data.get('price', 0),
+        agent_commission=data.get('agent_commission', 0),
+        status=data.get('status', 'pending')
+    )
+    db.session.add(task)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'task': {'id': task.id, 'title': task.title}}), 201
+
+
+@app.route('/api/tasks/<int:task_id>', methods=['GET', 'PUT', 'DELETE'])
+@require_api_token
+def api_task_detail(task_id):
+    """Get, update or delete specific task"""
+    task = Task.query.get_or_404(task_id)
+    
+    if request.method == 'GET':
+        return jsonify({
+            'id': task.id,
+            'title': task.title,
+            'description': task.description,
+            'status': task.status,
+            'price': float(task.price) if task.price else 0,
+            'agent_commission': float(task.agent_commission) if task.agent_commission else 0,
+            'show_commission_in_invoice': task.show_commission_in_invoice,
+            'agent': {'id': task.agent.id, 'name': task.agent.name} if task.agent else None,
+            'created_at': task.created_at.isoformat() if task.created_at else None,
+            'completed_at': task.completed_at.isoformat() if task.completed_at else None
+        })
+    
+    if request.method == 'PUT':
+        data = request.get_json() or {}
+        if 'title' in data:
+            task.title = data['title']
+        if 'description' in data:
+            task.description = data['description']
+        if 'status' in data:
+            task.status = data['status']
+        if 'price' in data:
+            task.price = data['price']
+        if 'agent_commission' in data:
+            task.agent_commission = data['agent_commission']
+        if 'agent_id' in data:
+            task.agent_id = data['agent_id']
+        db.session.commit()
+        return jsonify({'success': True, 'task': {'id': task.id, 'title': task.title}})
+    
+    if request.method == 'DELETE':
+        db.session.delete(task)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Task deleted'})
+
+
+# API: Purchases CRUD
+@app.route('/api/purchases', methods=['GET', 'POST'])
+@require_api_token
+def api_purchases():
+    """List all purchases or create new purchase"""
+    if request.method == 'GET':
+        agent_id = request.args.get('agent_id')
+        month = request.args.get('month')
+        year = request.args.get('year')
+        
+        query = Purchase.query
+        if agent_id:
+            query = query.filter_by(agent_id=int(agent_id))
+        if month and year:
+            query = query.filter(
+                db.func.strftime('%m', Purchase.created_at) == month,
+                db.func.strftime('%Y', Purchase.created_at) == year
+            )
+        
+        purchases = query.order_by(Purchase.created_at.desc()).all()
+        return jsonify({
+            'count': len(purchases),
+            'total_amount': sum(float(p.amount) for p in purchases),
+            'purchases': [{
+                'id': p.id,
+                'description': p.description,
+                'amount': float(p.amount),
+                'agent': {'id': p.agent.id, 'name': p.agent.name} if p.agent else None,
+                'created_at': p.created_at.isoformat() if p.created_at else None
+            } for p in purchases]
+        })
+    
+    data = request.get_json() or {}
+    if not data.get('description') or not data.get('amount'):
+        return jsonify({'error': 'description and amount required'}), 400
+    
+    purchase = Purchase(
+        description=data['description'],
+        amount=data['amount'],
+        agent_id=data.get('agent_id')
+    )
+    db.session.add(purchase)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'purchase': {'id': purchase.id, 'amount': float(purchase.amount)}}), 201
+
+
+@app.route('/api/purchases/<int:purchase_id>', methods=['GET', 'PUT', 'DELETE'])
+@require_api_token
+def api_purchase_detail(purchase_id):
+    """Get, update or delete specific purchase"""
+    purchase = Purchase.query.get_or_404(purchase_id)
+    
+    if request.method == 'GET':
+        return jsonify({
+            'id': purchase.id,
+            'description': purchase.description,
+            'amount': float(purchase.amount),
+            'agent': {'id': purchase.agent.id, 'name': purchase.agent.name} if purchase.agent else None,
+            'created_at': purchase.created_at.isoformat() if purchase.created_at else None
+        })
+    
+    if request.method == 'PUT':
+        data = request.get_json() or {}
+        if 'description' in data:
+            purchase.description = data['description']
+        if 'amount' in data:
+            purchase.amount = data['amount']
+        if 'agent_id' in data:
+            purchase.agent_id = data['agent_id']
+        db.session.commit()
+        return jsonify({'success': True, 'purchase': {'id': purchase.id}})
+    
+    if request.method == 'DELETE':
+        db.session.delete(purchase)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Purchase deleted'})
+
+
+# API: Income CRUD
+@app.route('/api/income', methods=['GET', 'POST'])
+@require_api_token
+def api_income():
+    """List all income or create new income"""
+    if request.method == 'GET':
+        agent_id = request.args.get('agent_id')
+        month = request.args.get('month')
+        year = request.args.get('year')
+        
+        query = Income.query
+        if agent_id:
+            query = query.filter_by(agent_id=int(agent_id))
+        if month and year:
+            query = query.filter(
+                db.func.strftime('%m', Income.created_at) == month,
+                db.func.strftime('%Y', Income.created_at) == year
+            )
+        
+        incomes = query.order_by(Income.created_at.desc()).all()
+        total = sum(float(i.amount) - float(i.discount or 0) for i in incomes)
+        
+        return jsonify({
+            'count': len(incomes),
+            'total_amount': total,
+            'income': [{
+                'id': i.id,
+                'description': i.description,
+                'amount': float(i.amount),
+                'discount': float(i.discount) if i.discount else 0,
+                'discount_description': i.discount_description,
+                'final_amount': float(i.amount) - float(i.discount or 0),
+                'agent': {'id': i.agent.id, 'name': i.agent.name} if i.agent else None,
+                'created_at': i.created_at.isoformat() if i.created_at else None
+            } for i in incomes]
+        })
+    
+    data = request.get_json() or {}
+    if not data.get('description') or not data.get('amount'):
+        return jsonify({'error': 'description and amount required'}), 400
+    
+    income = Income(
+        description=data['description'],
+        amount=data['amount'],
+        discount=data.get('discount', 0),
+        discount_description=data.get('discount_description'),
+        agent_id=data.get('agent_id')
+    )
+    db.session.add(income)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'income': {'id': income.id, 'amount': float(income.amount)}}), 201
+
+
+@app.route('/api/income/<int:income_id>', methods=['GET', 'PUT', 'DELETE'])
+@require_api_token
+def api_income_detail(income_id):
+    """Get, update or delete specific income"""
+    income = Income.query.get_or_404(income_id)
+    
+    if request.method == 'GET':
+        return jsonify({
+            'id': income.id,
+            'description': income.description,
+            'amount': float(income.amount),
+            'discount': float(income.discount) if income.discount else 0,
+            'discount_description': income.discount_description,
+            'final_amount': float(income.amount) - float(income.discount or 0),
+            'agent': {'id': income.agent.id, 'name': income.agent.name} if income.agent else None,
+            'created_at': income.created_at.isoformat() if income.created_at else None
+        })
+    
+    if request.method == 'PUT':
+        data = request.get_json() or {}
+        if 'description' in data:
+            income.description = data['description']
+        if 'amount' in data:
+            income.amount = data['amount']
+        if 'discount' in data:
+            income.discount = data['discount']
+        if 'discount_description' in data:
+            income.discount_description = data['discount_description']
+        if 'agent_id' in data:
+            income.agent_id = data['agent_id']
+        db.session.commit()
+        return jsonify({'success': True, 'income': {'id': income.id}})
+    
+    if request.method == 'DELETE':
+        db.session.delete(income)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Income deleted'})
+
+
+# API: Statistics and Reports
+@app.route('/api/statistics', methods=['GET'])
+@require_api_token
+def api_statistics():
+    """Get comprehensive statistics"""
+    month = request.args.get('month')
+    year = request.args.get('year')
+    
+    if month and year:
+        purchases = Purchase.query.filter(
+            db.func.strftime('%m', Purchase.created_at) == month,
+            db.func.strftime('%Y', Purchase.created_at) == year
+        ).all()
+        incomes = Income.query.filter(
+            db.func.strftime('%m', Income.created_at) == month,
+            db.func.strftime('%Y', Income.created_at) == year
+        ).all()
+    else:
+        purchases = Purchase.query.all()
+        incomes = Income.query.all()
+    
+    total_purchases = sum(float(p.amount) for p in purchases)
+    total_income = sum(float(i.amount) - float(i.discount or 0) for i in incomes)
+    
+    return jsonify({
+        'period': f'{year}-{month}' if month and year else 'all_time',
+        'agents': {
+            'total': Agent.query.count(),
+            'active': Agent.query.join(Task).filter(Task.status == 'in_progress').distinct().count()
+        },
+        'tasks': {
+            'total': Task.query.count(),
+            'pending': Task.query.filter_by(status='pending').count(),
+            'in_progress': Task.query.filter_by(status='in_progress').count(),
+            'completed': Task.query.filter_by(status='completed').count()
+        },
+        'financial': {
+            'total_purchases': total_purchases,
+            'total_income': total_income,
+            'profit': total_income - total_purchases,
+            'purchases_count': len(purchases),
+            'income_count': len(incomes)
+        }
+    })
+
+
+# API: Agent Performance Report
+@app.route('/api/agents/<int:agent_id>/performance', methods=['GET'])
+@require_api_token
+def api_agent_performance(agent_id):
+    """Get performance report for specific agent"""
+    agent = Agent.query.get_or_404(agent_id)
+    month = request.args.get('month')
+    year = request.args.get('year')
+    
+    tasks_query = Task.query.filter_by(agent_id=agent_id)
+    purchases_query = Purchase.query.filter_by(agent_id=agent_id)
+    income_query = Income.query.filter_by(agent_id=agent_id)
+    
+    if month and year:
+        tasks_query = tasks_query.filter(
+            db.func.strftime('%m', Task.created_at) == month,
+            db.func.strftime('%Y', Task.created_at) == year
+        )
+        purchases_query = purchases_query.filter(
+            db.func.strftime('%m', Purchase.created_at) == month,
+            db.func.strftime('%Y', Purchase.created_at) == year
+        )
+        income_query = income_query.filter(
+            db.func.strftime('%m', Income.created_at) == month,
+            db.func.strftime('%Y', Income.created_at) == year
+        )
+    
+    tasks = tasks_query.all()
+    completed_tasks = [t for t in tasks if t.status == 'completed']
+    
+    return jsonify({
+        'agent': {
+            'id': agent.id,
+            'name': agent.name,
+            'phone': agent.phone,
+            'email': agent.email
+        },
+        'period': f'{year}-{month}' if month and year else 'all_time',
+        'tasks': {
+            'total': len(tasks),
+            'completed': len(completed_tasks),
+            'pending': len([t for t in tasks if t.status == 'pending']),
+            'in_progress': len([t for t in tasks if t.status == 'in_progress'])
+        },
+        'financial': {
+            'purchases': sum(float(p.amount) for p in purchases_query.all()),
+            'income': sum(float(i.amount) - float(i.discount or 0) for i in income_query.all()),
+            'commission': sum(float(t.agent_commission or 0) for t in completed_tasks)
+        }
+    })
+
 
 if __name__ == '__main__':
     # Production: Set debug=False
