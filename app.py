@@ -100,7 +100,7 @@ def create_tables():
             for stmt in income_statements:
                 conn.exec_driver_sql(stmt)
             
-            # Task table migration: add completed, completed_at, income_id, car_count
+            # Task table migration: add completed, completed_at, income_id, car_count, agent_commission, show_commission_in_invoice
             task_cols = conn.exec_driver_sql("PRAGMA table_info(task)").fetchall()
             task_names = {row[1] for row in task_cols}
             task_statements = []
@@ -112,6 +112,10 @@ def create_tables():
                 task_statements.append("ALTER TABLE task ADD COLUMN income_id INTEGER")
             if 'car_count' not in task_names:
                 task_statements.append("ALTER TABLE task ADD COLUMN car_count INTEGER DEFAULT 0")
+            if 'agent_commission' not in task_names:
+                task_statements.append("ALTER TABLE task ADD COLUMN agent_commission REAL DEFAULT 0.0")
+            if 'show_commission_in_invoice' not in task_names:
+                task_statements.append("ALTER TABLE task ADD COLUMN show_commission_in_invoice INTEGER DEFAULT 0")
             for stmt in task_statements:
                 conn.exec_driver_sql(stmt)
         
@@ -649,8 +653,18 @@ def tasks():
         agent_id = request.form.get('agent_id')
         due = request.form.get('due_date')
         car_count = int(request.form.get('car_count', 0))
+        agent_commission = float(request.form.get('agent_commission', 0))
+        show_commission = request.form.get('show_commission_in_invoice') == 'on'
         due_date = datetime.strptime(due, '%Y-%m-%d').date() if due else None
-        t = Task(title=title, description=description, agent_id=agent_id, due_date=due_date, car_count=car_count)
+        t = Task(
+            title=title, 
+            description=description, 
+            agent_id=agent_id, 
+            due_date=due_date, 
+            car_count=car_count,
+            agent_commission=agent_commission,
+            show_commission_in_invoice=show_commission
+        )
         db.session.add(t)
         db.session.add(Log(action='create_task', detail=f'Task {title} assigned to {agent_id}', created_by=current_user.id))
         db.session.commit()
@@ -743,6 +757,8 @@ def edit_task(task_id):
         task.description = request.form.get('description')
         task.agent_id = request.form.get('agent_id')
         task.car_count = int(request.form.get('car_count', 0))
+        task.agent_commission = float(request.form.get('agent_commission', 0))
+        task.show_commission_in_invoice = request.form.get('show_commission_in_invoice') == 'on'
         due = request.form.get('due_date')
         task.due_date = datetime.strptime(due, '%Y-%m-%d').date() if due else None
         

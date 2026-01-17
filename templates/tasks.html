@@ -225,6 +225,17 @@
             <input type="number" class="form-control form-control-lg text-center" name="car_count" min="1" value="1" required style="font-size: 1.5rem; font-weight: bold;">
           </div>
           <div class="mb-3">
+            <label class="form-label">عمولة الموظف (اختياري)</label>
+            <input type="number" class="form-control" name="agent_commission" min="0" step="0.01" value="0" placeholder="0.00">
+            <small class="form-text text-muted">اترك 0 إذا لم يكن هناك عمولة</small>
+          </div>
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" name="show_commission_in_invoice" id="showCommissionQuick">
+            <label class="form-check-label" for="showCommissionQuick">
+              إظهار العمولة في الفاتورة
+            </label>
+          </div>
+          <div class="mb-3">
             <label class="form-label">العنوان (اختياري)</label>
             <input type="text" class="form-control" name="title" placeholder="مثال: تغليف اليوم">
           </div>
@@ -264,6 +275,16 @@
           <div class="mb-2">
             <label class="form-label">عدد السيارات المغلفة</label>
             <input type="number" class="form-control" name="car_count" min="0" value="0">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">عمولة الموظف</label>
+            <input type="number" class="form-control" name="agent_commission" min="0" step="0.01" value="0" placeholder="0.00">
+          </div>
+          <div class="mb-2 form-check">
+            <input type="checkbox" class="form-check-input" name="show_commission_in_invoice" id="showCommissionNew">
+            <label class="form-check-label" for="showCommissionNew">
+              إظهار العمولة في الفاتورة
+            </label>
           </div>
           <div class="mb-2">
             <label class="form-label">تاريخ الاستحقاق</label>

@@ -40,6 +40,8 @@ class Task(db.Model):
     completed_at = db.Column(db.DateTime)
     income_id = db.Column(db.Integer, db.ForeignKey('income.id'))
     car_count = db.Column(db.Integer, default=0)  # عدد السيارات المغلفة
+    agent_commission = db.Column(db.Float, default=0.0)  # عمولة الموظف
+    show_commission_in_invoice = db.Column(db.Boolean, default=False)  # إظهار العمولة في الفاتورة
 
 
 class MonthlyTarget(db.Model):
