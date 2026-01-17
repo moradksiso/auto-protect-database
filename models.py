@@ -72,6 +72,8 @@ class Income(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     agent_id = db.Column(db.Integer, db.ForeignKey('agent.id'))
     amount = db.Column(db.Float, nullable=False)
+    discount = db.Column(db.Float, default=0.0)
+    discount_description = db.Column(db.Text)
     source = db.Column(db.String(200))
     customer_name = db.Column(db.String(200))
     service_type = db.Column(db.String(200))

@@ -271,13 +271,23 @@
           <td><strong>{{ income.service_type or 'N/A' }}</strong></td>
           <td style="font-weight: 700; font-size: 18px;">{{ "%.2f"|format(income.amount) }} درهم (MAD)</td>
         </tr>
+        {% if income.discount and income.discount > 0 %}
+        <tr style="color: #dc3545;">
+          <td colspan="2" style="text-align: right;"><strong>الخصم / Discount</strong>
+            {% if income.discount_description %}
+            <br><small style="color: #6c757d;">{{ income.discount_description }}</small>
+            {% endif %}
+          </td>
+          <td style="font-weight: 700; font-size: 18px; color: #dc3545;">- {{ "%.2f"|format(income.discount) }} درهم</td>
+        </tr>
+        {% endif %}
       </tbody>
     </table>
     
     <!-- Total -->
     <div class="total-section">
-      <div class="total-label">المبلغ الإجمالي / Total Amount</div>
-      <div class="total-amount">{{ "%.2f"|format(income.amount) }} درهم</div>
+      <div class="total-label">المبلغ النهائي / Final Amount</div>
+      <div class="total-amount">{{ "%.2f"|format(income.amount - (income.discount or 0)) }} درهم</div>
       <div style="margin-top: 10px; font-size: 14px;">درهم مغربي / Moroccan Dirham (MAD)</div>
     </div>
     

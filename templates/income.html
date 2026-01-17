@@ -31,9 +31,22 @@
           </div>
           {% endif %}
           <div class="mb-2">
-            <label class="form-label">المبلغ (Amount) * - درهم مغربي (MAD)</label>
-            <input class="form-control" name="amount" type="number" step="0.01" required placeholder="0.00">
+            <label class="form-label">المبلغ الأصلي (Original Amount) * - درهم مغربي (MAD)</label>
+            <input class="form-control" id="income_amount" name="amount" type="number" step="0.01" required placeholder="0.00" onchange="calculateIncomeFinal()">
             <small class="text-muted">أدخل المبلغ بالدرهم المغربي</small>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">الخصم (Discount) - درهم مغربي (MAD)</label>
+            <input class="form-control" id="income_discount" name="discount" type="number" step="0.01" value="0" placeholder="0.00" onchange="calculateIncomeFinal()">
+            <small class="text-muted">أدخل قيمة الخصم إن وجد</small>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">المبلغ النهائي (Final Amount) - درهم مغربي (MAD)</label>
+            <input class="form-control" id="income_final" type="number" step="0.01" readonly style="background-color: #e9ecef; font-weight: bold;">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">وصف الخصم (Discount Description)</label>
+            <textarea class="form-control" name="discount_description" rows="2" placeholder="اكتب سبب الخصم هنا..."></textarea>
           </div>
           <div class="mb-2">
             <label class="form-label">اسم العميل (Customer Name) *</label>
@@ -170,7 +183,7 @@
     <div class="table-responsive">
       <table class="table table-sm">
         <thead>
-          <tr><th>التاريخ</th>{% if not is_agent %}<th>الموظف</th>{% endif %}<th>العميل</th><th>السيارة</th><th>الخدمة</th><th>المبلغ (درهم)</th><th>الفاتورة</th><th>إجراءات</th></tr>
+          <tr><th>التاريخ</th>{% if not is_agent %}<th>الموظف</th>{% endif %}<th>العميل</th><th>السيارة</th><th>الخدمة</th><th>المبلغ الأصلي</th><th>الخصم</th><th>المبلغ النهائي</th><th>الفاتورة</th><th>إجراءات</th></tr>
         </thead>
         <tbody>
         {% for i in incomes %}
@@ -189,7 +202,15 @@
           <td>{{ i.customer_name or '-' }}</td>
           <td>{{ i.car_type or '-' }}</td>
           <td>{{ i.service_type or '-' }}</td>
-          <td>{{ "%.2f"|format(i.amount) }} MAD</td>
+          <td>{{ "%.2f"|format(i.amount) }} درهم</td>
+          <td>
+            {% if i.discount and i.discount > 0 %}
+              <span class="badge bg-warning text-dark">{{ "%.2f"|format(i.discount) }} درهم</span>
+            {% else %}
+              <span class="text-muted">--</span>
+            {% endif %}
+          </td>
+          <td><strong style="color: #198754;">{{ "%.2f"|format(i.amount - (i.discount or 0)) }} درهم</strong></td>
           <td>{{ i.invoice_number or '-' }}</td>
           <td>
             <div class="btn-group" role="group">
@@ -226,4 +247,14 @@
     </div>
   </div>
 </div>
+
+<script>
+function calculateIncomeFinal() {
+  const amount = parseFloat(document.getElementById('income_amount').value) || 0;
+  const discount = parseFloat(document.getElementById('income_discount').value) || 0;
+  const final = amount - discount;
+  document.getElementById('income_final').value = final.toFixed(2);
+}
+</script>
+
 {% endblock %}

@@ -79,7 +79,7 @@ def create_tables():
                 conn.exec_driver_sql(stmt)
             conn.exec_driver_sql("CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_username ON agent(username) WHERE username IS NOT NULL")
             
-            # Income table migration: add agent_id, customer_name, service_type, car_type, invoice_number
+            # Income table migration: add agent_id, customer_name, service_type, car_type, invoice_number, discount, discount_description
             income_cols = conn.exec_driver_sql("PRAGMA table_info(income)").fetchall()
             income_names = {row[1] for row in income_cols}
             income_statements = []
@@ -93,6 +93,10 @@ def create_tables():
                 income_statements.append("ALTER TABLE income ADD COLUMN car_type TEXT")
             if 'invoice_number' not in income_names:
                 income_statements.append("ALTER TABLE income ADD COLUMN invoice_number TEXT")
+            if 'discount' not in income_names:
+                income_statements.append("ALTER TABLE income ADD COLUMN discount REAL DEFAULT 0.0")
+            if 'discount_description' not in income_names:
+                income_statements.append("ALTER TABLE income ADD COLUMN discount_description TEXT")
             for stmt in income_statements:
                 conn.exec_driver_sql(stmt)
             
@@ -193,9 +197,9 @@ def admin_dashboard():
     purchases_month = Purchase.query.filter(Purchase.date >= first_day).all()
     total_purchases = sum(p.amount for p in purchases_month)
     
-    # Income this month
+    # Income this month (with discount applied)
     income_month = Income.query.filter(Income.date >= first_day).all()
-    total_income = sum(i.amount for i in income_month)
+    total_income = sum((i.amount - (i.discount or 0)) for i in income_month)
     
     # Profit
     profit = total_income - total_purchases
@@ -247,9 +251,9 @@ def performance_report():
     report_data = []
     
     for agent in agents:
-        # Total income (not purchases)
+        # Total income (not purchases) with discount applied
         incomes = Income.query.filter_by(agent_id=agent.id).all()
-        total_income = sum(i.amount for i in incomes)
+        total_income = sum((i.amount - (i.discount or 0)) for i in incomes)
         
         # This month income
         today = date.today()
@@ -258,7 +262,7 @@ def performance_report():
             Income.agent_id == agent.id,
             Income.date >= first_day
         ).all()
-        month_income = sum(i.amount for i in month_incomes)
+        month_income = sum((i.amount - (i.discount or 0)) for i in month_incomes)
         
         # Total purchases (expenses)
         purchases = Purchase.query.filter_by(agent_id=agent.id).all()
@@ -1143,6 +1147,8 @@ def income():
             agent_id = request.form.get('agent_id')
         
         amount = float(request.form.get('amount') or 0)
+        discount = float(request.form.get('discount') or 0)
+        discount_description = request.form.get('discount_description', '').strip()
         source = request.form.get('source')
         customer_name = request.form.get('customer_name')
         service_type = request.form.get('service_type')
@@ -1157,7 +1163,9 @@ def income():
         
         inc = Income(
             agent_id=agent_id, 
-            amount=amount, 
+            amount=amount,
+            discount=discount,
+            discount_description=discount_description,
             source=source, 
             customer_name=customer_name,
             service_type=service_type,
@@ -1183,8 +1191,9 @@ def income():
                 db.session.add(new_car)
         
         # Create task for this income (car wrapping)
+        final_amount = amount - discount
         task_title = f"تغليف: {service_type or 'N/A'} - {customer_name or 'N/A'}"
-        task_desc = f"نوع السيارة: {car_type}\nالمبلغ: {amount} MAD\nالمصدر: {source}\nرقم الفاتورة: {invoice_number}"
+        task_desc = f"نوع السيارة: {car_type}\nالمبلغ الأصلي: {amount} MAD\nالخصم: {discount} MAD\nالمبلغ النهائي: {final_amount} MAD\nالمصدر: {source}\nرقم الفاتورة: {invoice_number}"
         task = Task(
             title=task_title,
             description=task_desc,
@@ -1256,7 +1265,11 @@ def income():
         if not df.empty:
             df['date'] = pd.to_datetime(df['date'])
             df['month'] = df['date'].dt.to_period('M')
-            monthly = df.groupby('month')['amount'].sum().reset_index()
+            # Calculate final amount (amount - discount)
+            df['discount'] = df['discount'].fillna(0)
+            df['final_amount'] = df['amount'] - df['discount']
+            monthly = df.groupby('month')['final_amount'].sum().reset_index()
+            monthly.columns = ['month', 'amount']
             monthly['month'] = monthly['month'].astype(str)
             monthly = monthly.to_dict(orient='records')
         else:
@@ -1295,7 +1308,7 @@ def delete_income(income_id):
     if task:
         db.session.delete(task)
     
-    db.session.add(Log(action='delete_income', detail=f'Deleted income {income.invoice_number} - Amount: {income.amount} MAD', created_by=current_user.id))
+    db.session.add(Log(action='delete_income', detail=f'Deleted income {income.invoice_number} - Amount: {income.amount} MAD (Discount: {income.discount or 0}) = Final: {income.amount - (income.discount or 0)} MAD', created_by=current_user.id))
     db.session.delete(income)
     db.session.commit()
     flash('تم حذف المدخول بنجاح!', 'success')
@@ -1315,6 +1328,8 @@ def edit_income(income_id):
     if request.method == 'POST':
         income.agent_id = int(request.form.get('agent_id'))
         income.amount = float(request.form.get('amount'))
+        income.discount = float(request.form.get('discount', 0))
+        income.discount_description = request.form.get('discount_description', '').strip()
         income.source = request.form.get('source')
         income.customer_name = request.form.get('customer_name')
         income.service_type = request.form.get('service_type')
@@ -1328,12 +1343,13 @@ def edit_income(income_id):
         # Update related task if exists
         task = Task.query.filter_by(income_id=income_id).first()
         if task:
+            final_amount = income.amount - income.discount
             task.title = f"خدمة {income.service_type or 'N/A'} - {income.customer_name or 'N/A'}"
-            task.description = f"نوع السيارة: {income.car_type}\nالمبلغ: {income.amount} MAD\nالمصدر: {income.source}\nرقم الفاتورة: {income.invoice_number}"
+            task.description = f"نوع السيارة: {income.car_type}\nالمبلغ الأصلي: {income.amount} MAD\nالخصم: {income.discount} MAD\nالمبلغ النهائي: {final_amount} MAD\nالمصدر: {income.source}\nرقم الفاتورة: {income.invoice_number}"
             task.agent_id = income.agent_id
             task.due_date = income.date
         
-        db.session.add(Log(action='edit_income', detail=f'Edited income {income.invoice_number}', created_by=current_user.id))
+        db.session.add(Log(action='edit_income', detail=f'Edited income {income.invoice_number}: {income.amount} - {income.discount} = {income.amount - income.discount}', created_by=current_user.id))
         db.session.commit()
         flash('تم تحديث المدخول بنجاح!', 'success')
         return redirect(url_for('income'))
@@ -1353,10 +1369,17 @@ def income_download_month(month):
         data = []
         for i in incomes:
             if i.date and i.date.strftime('%Y-%m') == month:
+                final_amount = i.amount - (i.discount or 0)
                 data.append({
                     'Date': i.date.strftime('%Y-%m-%d'),
-                    'Amount': i.amount,
+                    'Customer': i.customer_name or '',
+                    'Service': i.service_type or '',
+                    'Car Type': i.car_type or '',
+                    'Original Amount': i.amount,
+                    'Discount': i.discount or 0,
+                    'Final Amount': final_amount,
                     'Source': i.source or '',
+                    'Invoice': i.invoice_number or '',
                     'Note': i.note or ''
                 })
         
