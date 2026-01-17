@@ -272,11 +272,8 @@ def performance_report():
         total_agent_commission = sum(t.agent_commission or 0 for t in completed_tasks)
         
         # This month agent commission
-        month_tasks = Task.query.filter(
-            Task.agent_id == agent.id,
-            Task.completed == True,
-            db.func.strftime('%Y-%m', Task.completed_at) == today.strftime('%Y-%m')
-        ).all()
+        month_tasks = [t for t in completed_tasks if t.completed_at and 
+                      t.completed_at.strftime('%Y-%m') == today.strftime('%Y-%m')]
         month_agent_commission = sum(t.agent_commission or 0 for t in month_tasks)
         
         # Agent expenses (purchases)
