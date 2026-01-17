@@ -243,28 +243,43 @@ def agents_list():
 @app.route('/reports/performance')
 @login_required
 def performance_report():
-    """Performance report for all agents"""
+    """Performance report for all agents - displays data only without profit calculations"""
     from datetime import date
-    from dateutil.relativedelta import relativedelta
     
     agents = Agent.query.all()
     report_data = []
     
     for agent in agents:
-        # Total income (not purchases) with discount applied
-        incomes = Income.query.filter_by(agent_id=agent.id).all()
-        total_income = sum((i.amount - (i.discount or 0)) for i in incomes)
-        
-        # This month income
         today = date.today()
         first_day = today.replace(day=1)
+        
+        # Company income (not agent income) - for display only
+        incomes = Income.query.filter_by(agent_id=agent.id).all()
+        total_company_income = sum((i.amount - (i.discount or 0)) for i in incomes)
+        
+        # This month company income - for display only
         month_incomes = Income.query.filter(
             Income.agent_id == agent.id,
             Income.date >= first_day
         ).all()
-        month_income = sum((i.amount - (i.discount or 0)) for i in month_incomes)
+        month_company_income = sum((i.amount - (i.discount or 0)) for i in month_incomes)
         
-        # Total purchases (expenses)
+        # Agent commission from completed tasks
+        completed_tasks = Task.query.filter(
+            Task.agent_id == agent.id,
+            Task.completed == True
+        ).all()
+        total_agent_commission = sum(t.agent_commission or 0 for t in completed_tasks)
+        
+        # This month agent commission
+        month_tasks = Task.query.filter(
+            Task.agent_id == agent.id,
+            Task.completed == True,
+            db.func.strftime('%Y-%m', Task.completed_at) == today.strftime('%Y-%m')
+        ).all()
+        month_agent_commission = sum(t.agent_commission or 0 for t in month_tasks)
+        
+        # Agent expenses (purchases)
         purchases = Purchase.query.filter_by(agent_id=agent.id).all()
         total_expenses = sum(p.amount for p in purchases)
         
@@ -277,44 +292,30 @@ def performance_report():
         
         # Tasks statistics
         tasks_assigned = Task.query.filter_by(agent_id=agent.id).count()
-        tasks_completed = Task.query.filter(
-            Task.agent_id == agent.id,
-            Task.completed == True
-        ).count()
+        tasks_completed = len(completed_tasks)
         
         # Cars wrapped this month
-        cars_this_month = db.session.query(db.func.sum(Task.car_count)).filter(
-            Task.agent_id == agent.id,
-            Task.completed == True,
-            db.func.strftime('%Y-%m', Task.completed_at) == today.strftime('%Y-%m')
-        ).scalar() or 0
+        cars_this_month = sum(t.car_count or 0 for t in month_tasks)
         
         # Total cars wrapped
-        total_cars = db.session.query(db.func.sum(Task.car_count)).filter(
-            Task.agent_id == agent.id,
-            Task.completed == True
-        ).scalar() or 0
-        
-        # Net profit
-        net_profit_total = total_income - total_expenses
-        net_profit_month = month_income - month_expenses
+        total_cars = sum(t.car_count or 0 for t in completed_tasks)
         
         report_data.append({
             'agent': agent,
-            'total_income': total_income,
-            'month_income': month_income,
+            'total_company_income': total_company_income,
+            'month_company_income': month_company_income,
+            'total_agent_commission': total_agent_commission,
+            'month_agent_commission': month_agent_commission,
             'total_expenses': total_expenses,
             'month_expenses': month_expenses,
-            'net_profit_total': net_profit_total,
-            'net_profit_month': net_profit_month,
             'tasks_assigned': tasks_assigned,
             'tasks_completed': tasks_completed,
             'cars_this_month': cars_this_month,
             'total_cars': total_cars
         })
     
-    # Sort by month income descending
-    report_data.sort(key=lambda x: x['month_income'], reverse=True)
+    # Sort by month company income descending
+    report_data.sort(key=lambda x: x['month_company_income'], reverse=True)
     
     return render_template('performance_report.html', report_data=report_data)
 

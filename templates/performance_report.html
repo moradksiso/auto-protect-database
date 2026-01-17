@@ -13,16 +13,19 @@
     <h5 class="mb-0">ملخص الأداء</h5>
   </div>
   <div class="card-body">
+    <div class="alert alert-info" role="alert">
+      <strong>ملاحظة:</strong> المداخيل المعروضة هي مداخيل الشركة. الموظف يحصل فقط على عمولة من المهام المنجزة.
+    </div>
     <div class="table-responsive">
       <table class="table table-striped table-hover">
         <thead>
           <tr>
             <th>#</th>
             <th>الموظف</th>
-            <th>مداخيل هذا الشهر</th>
-            <th>مصروفات هذا الشهر</th>
-            <th>صافي الربح (هـذا الشهر)</th>
-            <th>سيارات مغلفة (هـذا الشهر)</th>
+            <th>مداخيل الشركة (هذا الشهر)</th>
+            <th>عمولة الموظف (هذا الشهر)</th>
+            <th>مصروفات الموظف (هذا الشهر)</th>
+            <th>سيارات مغلفة (هذا الشهر)</th>
             <th>المهام المكلف بها</th>
             <th>المهام المنجزة</th>
             <th>معدل الإنجاز</th>
@@ -35,7 +38,12 @@
             <td><strong>{{ item.agent.name }}</strong></td>
             <td>
               <span class="badge bg-success" style="font-size: 0.9rem;">
-                {{ "%.2f"|format(item.month_income) }} درهم
+                {{ "%.2f"|format(item.month_company_income) }} درهم
+              </span>
+            </td>
+            <td>
+              <span class="badge bg-primary" style="font-size: 0.9rem;">
+                {{ "%.2f"|format(item.month_agent_commission) }} درهم
               </span>
             </td>
             <td>
@@ -44,12 +52,7 @@
               </span>
             </td>
             <td>
-              <span class="badge bg-{% if item.net_profit_month >= 0 %}info{% else %}warning{% endif %}" style="font-size: 0.9rem;">
-                {{ "%.2f"|format(item.net_profit_month) }} درهم
-              </span>
-            </td>
-            <td>
-              <span class="badge bg-primary">
+              <span class="badge bg-info">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
                   <path d="M4 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm8 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zM3 5.5A1.5 1.5 0 0 1 4.5 4h7A1.5 1.5 0 0 1 13 5.5v5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 10.5v-5zM4.5 5a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5v-5a.5.5 0 0 0-.5-.5h-7z"/>
                 </svg>
@@ -88,8 +91,8 @@
       <div class="card-body text-center">
         {% if report_data %}
           <h3 class="text-success">{{ report_data[0].agent.name }}</h3>
-          <p class="mb-1"><strong>مداخيل:</strong> {{ "%.2f"|format(report_data[0].month_income) }} درهم</p>
-          <p class="mb-1"><strong>صافي الربح:</strong> {{ "%.2f"|format(report_data[0].net_profit_month) }} درهم</p>
+          <p class="mb-1"><strong>مداخيل الشركة:</strong> {{ "%.2f"|format(report_data[0].month_company_income) }} درهم</p>
+          <p class="mb-1"><strong>عمولة الموظف:</strong> {{ "%.2f"|format(report_data[0].month_agent_commission) }} درهم</p>
           <p class="mb-0"><strong>سيارات مغلفة:</strong> {{ report_data[0].cars_this_month }}</p>
         {% else %}
           <p class="text-muted">لا توجد بيانات</p>
@@ -105,12 +108,13 @@
       </div>
       <div class="card-body text-center">
         {% if report_data %}
-          {% set total_month_income = report_data|sum(attribute='month_income') %}
+          {% set total_month_company_income = report_data|sum(attribute='month_company_income') %}
+          {% set total_month_commission = report_data|sum(attribute='month_agent_commission') %}
           {% set total_month_expenses = report_data|sum(attribute='month_expenses') %}
-          {% set total_net_profit = total_month_income - total_month_expenses %}
-          <h3 class="text-info">{{ "%.2f"|format(total_net_profit) }} درهم</h3>
-          <p class="mb-1"><small>مداخيل: {{ "%.2f"|format(total_month_income) }} درهم</small></p>
-          <p class="mb-0"><small>مصروفات: {{ "%.2f"|format(total_month_expenses) }} درهم</small></p>
+          <h3 class="text-info">{{ "%.2f"|format(total_month_company_income) }} درهم</h3>
+          <p class="mb-1"><small>مداخيل الشركة</small></p>
+          <p class="mb-1"><small>عمولات الموظفين: {{ "%.2f"|format(total_month_commission) }} درهم</small></p>
+          <p class="mb-0"><small>مصروفات الموظفين: {{ "%.2f"|format(total_month_expenses) }} درهم</small></p>
         {% else %}
           <p class="text-muted">لا توجد بيانات</p>
         {% endif %}
